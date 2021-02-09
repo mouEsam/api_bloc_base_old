@@ -40,24 +40,24 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     listen((state) {
       _timer?.cancel();
       BaseProfile user;
-      _userAccount.add(user);
       if (state is SignedOutState) {
         firstLoginEmit = true;
         _detailsSubscription?.cancel();
       } else if (state is BaseSignedInState) {
         user = state.userAccount;
-        if (profileShouldRefresh) {
+        if (shouldProfileRefresh(state)) {
           _timer = Timer.periodic(Duration(seconds: 30), (_) => autoSignIn());
         }
       }
+      _userAccount.add(user);
     });
   }
 
-  bool get profileShouldRefresh => true;
+  bool shouldProfileRefresh(BaseSignedInState state) => true;
 
   Future<Either<ResponseEntity, BaseProfile>> autoSignIn([bool silent = true]);
 
-  Result<Either<ResponseEntity, BaseProfile>> login(Params params);
+  Result<Either<ResponseEntity, BaseProfile>> login<T extends Params>(T params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
