@@ -104,7 +104,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
         userDefaults.setSignedAccount(user);
         userDefaults.setUserToken(user.accessToken);
       }
-      firstLoginEmit = isFirstLogin(user);
+      //firstLoginEmit = isFirstLogin(user);
       emitSignedUser(user);
     }
   }
