@@ -68,7 +68,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     final actualLogOut = () {
       userDefaults.setSignedAccount(null);
       userDefaults.setUserToken(null);
-      _handleUser(null);
+      handleUser(null);
     };
     if (result is Success ||
         (result is Failure && result is! InternetFailure)) {
@@ -83,7 +83,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     final one = userDefaults.setSignedAccount(null);
     final two = userDefaults.setUserToken(null);
     final result = Future.wait([one, two]).then((value) {
-      _handleUser(null);
+      handleUser(null);
       return Success();
     }).catchError((e, s) {
       print(e);
@@ -93,7 +93,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     return Result(resultFuture: result);
   }
 
-  Future<void> _handleUser(BaseProfile user) async {
+  Future<void> handleUser(BaseProfile user) async {
     print(user);
     if (user == null) {
       userDefaults.setSignedAccount(null);
