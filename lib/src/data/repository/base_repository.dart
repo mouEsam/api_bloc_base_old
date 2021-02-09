@@ -88,7 +88,7 @@ abstract class BaseRepository {
         progress: result.progress);
   }
 
-  Result<ResponseEntity> handleBaseApiResponse<T extends BaseApiResponse>(
+  Result<ResponseEntity> handleApiResponse<T extends BaseApiResponse>(
     RequestResult<T> result, {
     BaseResponseConverter converter,
     void Function(T) interceptData,
