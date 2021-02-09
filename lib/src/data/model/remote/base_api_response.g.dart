@@ -22,5 +22,5 @@ Map<String, dynamic> _$BaseApiResponseToJson(BaseApiResponse instance) =>
       'success': instance.success,
       'message': instance.message,
       'error': instance.error,
-      'errors': instance.errors,
+      'errors': instance.errors?.toJson(),
     };

@@ -55,12 +55,12 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
   Output Function(Input input) get converter => null;
 
   void _handler(provider.ProviderState event) {
-    if (event is provider.LoadingState<Input>) {
+    if (event is provider.ProviderLoadingState<Input>) {
       emitLoading();
-    } else if (event is provider.LoadedState<Input>) {
+    } else if (event is provider.ProviderLoadedState<Input>) {
       currentData = converter(event.data);
       emitLoaded();
-    } else if (event is provider.ErrorState<Input>) {
+    } else if (event is provider.ProviderErrorState<Input>) {
       emit(ErrorState<Output>(event.message));
     }
   }

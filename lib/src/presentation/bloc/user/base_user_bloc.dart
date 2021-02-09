@@ -26,16 +26,16 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
   Stream<provider.ProviderState<BaseProfile>> get profileStream =>
       userStream.map<provider.ProviderState<BaseProfile>>((event) {
         if (event != null) {
-          return provider.LoadedState(event);
+          return provider.ProviderLoadedState(event);
         } else {
-          return provider.LoadingState();
+          return provider.ProviderLoadingState();
         }
       });
 
   BaseProfile get currentUser => _userAccount.value;
   bool firstLoginEmit = true;
 
-  BaseUserBloc(this.userDefaults) : super(LoadingState()) {
+  BaseUserBloc(this.userDefaults) : super(UserLoadingState()) {
     autoSignIn();
     listen((state) {
       _timer?.cancel();

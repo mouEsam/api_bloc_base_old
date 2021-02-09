@@ -11,8 +11,8 @@ abstract class BaseUserState extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadingState extends BaseUserState {
-  LoadingState();
+class UserLoadingState extends BaseUserState {
+  UserLoadingState();
 
   @override
   List<Object> get props => [];

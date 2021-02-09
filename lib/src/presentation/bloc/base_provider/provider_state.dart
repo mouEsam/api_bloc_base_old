@@ -10,23 +10,23 @@ class ProviderState<T> extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadingState<T> extends ProviderState<T> {}
+class ProviderLoadingState<T> extends ProviderState<T> {}
 
 class InvalidatedState<T> extends ProviderState<T> {}
 
-class LoadedState<T> extends ProviderState<T> {
+class ProviderLoadedState<T> extends ProviderState<T> {
   final T data;
 
-  const LoadedState(this.data);
+  const ProviderLoadedState(this.data);
 
   @override
   List<Object> get props => [this.data];
 }
 
-class ErrorState<T> extends ProviderState<T> {
+class ProviderErrorState<T> extends ProviderState<T> {
   final String message;
 
-  const ErrorState(this.message);
+  const ProviderErrorState(this.message);
 
   @override
   List<Object> get props => [this.message];

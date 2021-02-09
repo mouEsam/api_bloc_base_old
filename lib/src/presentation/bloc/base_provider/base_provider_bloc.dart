@@ -41,9 +41,9 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
 
   BaseProviderBloc(
       {Data initialDate, bool enableRetry = true, bool getOnCreate = true})
-      : super(LoadingState()) {
+      : super(ProviderLoadingState()) {
     if (initialDate != null) {
-      emit(LoadedState(initialDate));
+      emit(ProviderLoadedState(initialDate));
     }
     _setUpListener(enableRetry);
     if (getOnCreate) {
@@ -70,10 +70,10 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
         _handleState(state);
       }
       print('${state} ${enableRetry}');
-      if (state is ErrorState && enableRetry) {
+      if (state is ProviderErrorState && enableRetry) {
         _retrialTimer?.cancel();
         _retrialTimer = Timer(RETRIAL_TIME, getData);
-      } else if (state is LoadedState) {
+      } else if (state is ProviderLoadedState) {
         _retrialTimer?.cancel();
         _retrialTimer = Timer.periodic(RETRIAL_TIME, (_) => refresh());
       }
@@ -85,7 +85,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
 
   void _handleState(state) {
     Data data;
-    if (state is LoadedState) {
+    if (state is ProviderLoadedState) {
       data = state.data;
       _retrialTimer?.cancel();
       _dataSubject.add(data);
@@ -109,11 +109,11 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
     final future = await result.resultFuture;
     return future.fold<Data>(
       (l) {
-        emit(ErrorState(l.message));
+        emit(ProviderErrorState(l.message));
         return null;
       },
       (r) {
-        emit(LoadedState(r));
+        emit(ProviderLoadedState(r));
         return r;
       },
     );
@@ -123,7 +123,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
       Either<ResponseEntity, Stream<Data>> result, bool refresh) async {
     result.fold(
       (l) {
-        emit(ErrorState(l.message));
+        emit(ProviderErrorState(l.message));
       },
       (r) {
         _subscription?.cancel();
@@ -132,11 +132,11 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
             emitLoading();
           }
         }).listen((event) {
-          emit(LoadedState(event));
+          emit(ProviderLoadedState(event));
         }, onError: (e, s) {
           print(e);
           print(s);
-          emit(ErrorState(defaultError));
+          emit(ProviderErrorState(defaultError));
         });
       },
     );
@@ -192,23 +192,23 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
   }
 
   void emitLoading() {
-    emit(LoadingState<Data>());
+    emit(ProviderLoadingState<Data>());
   }
 
   Stream<ProviderState<Out>> transformStream<Out>(
       {Out outData, Stream<Out> outStream}) {
     return stateStream.flatMap((value) {
-      if (value is LoadingState<Data>) {
-        return Stream.value(LoadingState<Out>());
-      } else if (value is ErrorState<Data>) {
-        return Stream.value(ErrorState<Out>(value.message));
+      if (value is ProviderLoadingState<Data>) {
+        return Stream.value(ProviderLoadingState<Out>());
+      } else if (value is ProviderErrorState<Data>) {
+        return Stream.value(ProviderErrorState<Out>(value.message));
       } else if (value is InvalidatedState<Data>) {
         return Stream.value(InvalidatedState<Out>());
       } else {
         if (outData != null) {
-          return Stream.value(LoadedState<Out>(outData));
+          return Stream.value(ProviderLoadedState<Out>(outData));
         } else if (outStream != null) {
-          return outStream.map((event) => LoadedState<Out>(event));
+          return outStream.map((event) => ProviderLoadedState<Out>(event));
         }
         return null;
       }
