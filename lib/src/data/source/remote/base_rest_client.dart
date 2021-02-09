@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 
 enum RequestMethod {
   POST,
@@ -49,6 +51,9 @@ class BaseRestClient {
     Map<String, dynamic> queryParameters,
     T Function(Map<String, dynamic>) fromJson,
   }) {
+    if (T == BaseApiResponse) {
+      throw FlutterError('T must be a sub class of BaseApiResponse');
+    }
     final progressController = StreamController<double>();
     if (params != null) {
       print(Map.fromEntries(
