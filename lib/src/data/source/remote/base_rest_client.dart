@@ -52,7 +52,8 @@ class BaseRestClient {
     T Function(Map<String, dynamic>) fromJson,
   }) {
     if (T == BaseApiResponse) {
-      throw FlutterError('T must be a sub class of BaseApiResponse');
+      throw FlutterError(
+          'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
     }
     final progressController = StreamController<double>();
     if (params != null) {
