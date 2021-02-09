@@ -6,13 +6,8 @@ export 'base_errors.dart';
 
 part 'base_api_response.g.dart';
 
-class BaseApiResponseMixin {
-  String success;
-  String message;
-}
-
 @JsonSerializable()
-class BaseApiResponse with BaseApiResponseMixin {
+class BaseApiResponse {
   BaseApiResponse(
     this.success,
     this.message,

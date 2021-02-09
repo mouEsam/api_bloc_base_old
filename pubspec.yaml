@@ -21,6 +21,7 @@ dependencies:
   path_provider: ^1.6.24
   flutter_secure_storage: ^3.3.5
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
