@@ -5,9 +5,9 @@ import 'package:sembast/sembast_io.dart';
 class LocalCache {
   static const String dbPath = 'sample.db';
 
-  final Database _db;
+  final Database db;
 
-  const LocalCache._(this._db);
+  const LocalCache._(this.db);
 
   static Future<LocalCache> create() async {
     DatabaseFactory dbFactory = databaseFactoryIo;
