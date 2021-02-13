@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -6,6 +7,7 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 enum RequestMethod {
   POST,
@@ -38,6 +40,7 @@ class BaseRestClient {
     dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
     dio.options.receiveDataWhenStatusError = true;
     dio.options.validateStatus = (_) => true;
+    dio.transformer = CustomTransformer();
   }
 
   RequestResult<T> request<T>(
@@ -143,4 +146,9 @@ class RequestResult<T> {
   final Stream<double> progress;
 
   const RequestResult({this.cancelToken, this.resultFuture, this.progress});
+}
+
+class CustomTransformer extends DefaultTransformer {
+  @override
+  get jsonDecodeCallback => (String json) => compute(jsonDecode, json);
 }
