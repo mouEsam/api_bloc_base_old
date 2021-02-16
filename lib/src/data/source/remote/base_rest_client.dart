@@ -49,6 +49,7 @@ class BaseRestClient {
     CancelToken cancelToken,
     String authorizationToken,
     Params params,
+    dynamic acceptedLanguage,
     Map<String, dynamic> extra,
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
@@ -68,6 +69,11 @@ class BaseRestClient {
     queryParameters ??= <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
     headers ??= <String, dynamic>{};
+    if (acceptedLanguage is Locale) {
+      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;
+    } else if (acceptedLanguage != null) {
+      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.toString();
+    }
     if (authorizationToken != null) {
       headers[HttpHeaders.authorizationHeader] = 'Bearer $authorizationToken';
     }
