@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:async/async.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'base_working_bloc.dart';
@@ -14,7 +15,7 @@ abstract class BaseConverterBloc<Input, Output>
   StreamSubscription _subscription;
 
   final _inputSubject = BehaviorSubject<Input>();
-  Stream<Input> get inputStream => _inputSubject.shareValue();
+  Stream<Input> get inputStream => LazyStream(() => _inputSubject.shareValue());
   StreamSink<Input> get inputSink => _inputSubject.sink;
 
   BaseConverterBloc() : super(null) {

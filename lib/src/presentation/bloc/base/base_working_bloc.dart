@@ -4,6 +4,7 @@ import 'package:api_bloc_base/src/data/model/remote/base_api_response.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -33,9 +34,10 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
   StreamSink<provider.ProviderState<Input>> get eventSink =>
       _eventsSubject.sink;
   Stream<provider.ProviderState<Input>> get eventStream =>
-      _eventsSubject.shareValue();
+      async.LazyStream(() => _eventsSubject.shareValue());
   final _statesSubject = BehaviorSubject<BlocState<Output>>();
-  Stream<BlocState<Output>> get stateStream => _statesSubject.shareValue();
+  Stream<BlocState<Output>> get stateStream =>
+      async.LazyStream(() => _statesSubject.shareValue());
 
   Map<String, Tuple3<String, CancelToken, Stream<double>>> _operationStack = {};
 

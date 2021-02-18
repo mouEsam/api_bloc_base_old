@@ -20,7 +20,7 @@ dependencies:
   sembast: ^2.4.8
   path_provider: ^1.6.24
   flutter_secure_storage: ^3.3.5
-
+  async: any
 
 dev_dependencies:
   flutter_test:

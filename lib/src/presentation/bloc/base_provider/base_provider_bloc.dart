@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,8 +30,10 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
   String get defaultError => 'Error';
 
   Timer _retrialTimer;
-  Stream<Data> get dataStream => _dataSubject.shareValue();
-  Stream<ProviderState<Data>> get stateStream => _stateSubject.shareValue();
+  Stream<Data> get dataStream =>
+      async.LazyStream(() => _dataSubject.shareValue());
+  Stream<ProviderState<Data>> get stateStream =>
+      async.LazyStream(() => _stateSubject.shareValue());
   Future<Data> get dataFuture => _dataFuture.future;
   Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
 
