@@ -7,7 +7,7 @@ abstract class LifecycleAware {
   void onInactive() {}
 }
 
-abstract class LifecycleObserver extends WidgetsBindingObserver {
+mixin LifecycleObserver on WidgetsBindingObserver {
   AppLifecycleState _lastAppState = AppLifecycleState.resumed;
   final Set<LifecycleAware> _listeners = {};
 
