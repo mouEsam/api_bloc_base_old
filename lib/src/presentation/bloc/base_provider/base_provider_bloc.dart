@@ -19,7 +19,7 @@ class BaseBloc extends Cubit<int> {
 
 abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     implements LifecycleAware {
-  static const RETRIAL_TIME = Duration(seconds: 25);
+  static const REFRESH_TIME = Duration(seconds: 30);
 
   final LifecycleObserver observer;
   final _dataSubject = BehaviorSubject<Data>();
@@ -99,12 +99,14 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
         _handleState(state);
       }
       print('${state} ${enableRetry}');
-      if (state is ProviderErrorState && enableRetry) {
-        _retrialTimer?.cancel();
-        _retrialTimer = Timer(RETRIAL_TIME, getData);
-      } else if (state is ProviderLoadedState) {
-        _retrialTimer?.cancel();
-        _retrialTimer = Timer.periodic(RETRIAL_TIME, (_) => refresh());
+      if (REFRESH_TIME != null) {
+        if (state is ProviderErrorState && enableRetry) {
+          _retrialTimer?.cancel();
+          _retrialTimer = Timer(REFRESH_TIME, getData);
+        } else if (state is ProviderLoadedState) {
+          _retrialTimer?.cancel();
+          _retrialTimer = Timer.periodic(REFRESH_TIME, (_) => refresh());
+        }
       }
     }, onError: (e, s) {
       print(e);
