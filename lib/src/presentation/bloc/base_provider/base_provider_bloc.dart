@@ -85,6 +85,12 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     stopRetries(false);
   }
 
+  @override
+  void onDetach() {}
+
+  @override
+  void onInactive() {}
+
   void _setUpListener(bool enableRetry) {
     listen((state) {
       if (state is InvalidatedState) {
