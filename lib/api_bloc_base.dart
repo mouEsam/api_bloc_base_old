@@ -15,6 +15,7 @@ export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';
+export 'src/presentation/bloc/base_provider/lifecycle_observer.dart';
 export 'src/presentation/bloc/base_provider/provider_state.dart';
 export 'src/presentation/bloc/base_provider/user_dependant_provider.dart';
 export 'src/presentation/bloc/user/base_user_bloc.dart';
