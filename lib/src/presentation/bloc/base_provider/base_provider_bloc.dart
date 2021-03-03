@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'lifecycle_observer.dart';
 import 'provider_state.dart';
 
 export 'provider_state.dart';
@@ -16,9 +17,11 @@ class BaseBloc extends Cubit<int> {
   BaseBloc() : super(0);
 }
 
-abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
+abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
+    implements LifecycleAware {
   static const RETRIAL_TIME = Duration(seconds: 25);
 
+  final LifecycleObserver observer;
   final _dataSubject = BehaviorSubject<Data>();
   final _stateSubject = BehaviorSubject<ProviderState<Data>>();
   var _dataFuture = Completer<Data>();
@@ -26,6 +29,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
 
   StreamSubscription<Data> _subscription;
   bool green = false;
+  bool shouldBeGreen = false;
 
   String get defaultError => 'Error';
 
@@ -43,8 +47,12 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
   Either<ResponseEntity, Stream<Data>> get dataSourceStream => null;
 
   BaseProviderBloc(
-      {Data initialDate, bool enableRetry = true, bool getOnCreate = true})
+      {Data initialDate,
+      bool enableRetry = true,
+      bool getOnCreate = true,
+      this.observer})
       : super(ProviderLoadingState()) {
+    observer?.addListener(this);
     if (initialDate != null) {
       emit(ProviderLoadedState(initialDate));
     }
@@ -54,15 +62,27 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
     }
   }
 
-  void startTries() {
+  void startTries([bool userLogStateEvent = true]) {
     green = true;
+    shouldBeGreen = userLogStateEvent || shouldBeGreen;
     getData();
   }
 
-  void stopRetries() {
+  void stopRetries([bool userLogStateEvent = true]) {
     green = false;
+    shouldBeGreen = !userLogStateEvent && shouldBeGreen;
     _retrialTimer?.cancel();
     emitLoading();
+  }
+
+  @override
+  void onResume() {
+    startTries(false);
+  }
+
+  @override
+  void onPause() {
+    stopRetries(false);
   }
 
   void _setUpListener(bool enableRetry) {
@@ -177,7 +197,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
 
   @mustCallSuper
   void getData({bool refresh = false}) {
-    if (green) {
+    if (green && shouldBeGreen) {
       if (dataSource != null) {
         handleOperation(dataSource, refresh);
       } else if (dataSourceStream != null) {
@@ -220,6 +240,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>> {
 
   @override
   Future<void> close() {
+    observer?.removeListener(this);
     _subscription?.cancel();
     _dataSubject.drain().then((value) => _dataSubject.close());
     _stateSubject.drain().then((value) => _stateSubject.close());
