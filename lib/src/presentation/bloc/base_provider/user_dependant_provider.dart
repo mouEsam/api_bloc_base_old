@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
 import 'base_provider_bloc.dart';
+import 'lifecycle_observer.dart';
 
 abstract class UserDependantProvider<Data> extends BaseProviderBloc<Data> {
   final BaseUserBloc userBloc;
@@ -10,8 +11,12 @@ abstract class UserDependantProvider<Data> extends BaseProviderBloc<Data> {
   get userId => userBloc.currentUser?.id;
   StreamSubscription _subscription;
 
-  UserDependantProvider(this.userBloc, {Data initialData})
-      : super(initialDate: initialData, getOnCreate: false) {
+  UserDependantProvider(this.userBloc,
+      {Data initialData, LifecycleObserver lifecycleObserver})
+      : super(
+            initialDate: initialData,
+            getOnCreate: false,
+            observer: lifecycleObserver) {
     _subscription = userBloc.userStream.listen(
       (user) {
         final newToken = user?.accessToken;
