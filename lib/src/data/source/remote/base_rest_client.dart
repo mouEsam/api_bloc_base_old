@@ -77,7 +77,7 @@ class BaseRestClient {
     CancelToken cancelToken,
     String authorizationToken,
     Params params,
-    String subDomain = 'www',
+    String subDomain,
     dynamic acceptedLanguage,
     CacheOptions options,
     Map<String, dynamic> extra,
@@ -143,8 +143,12 @@ class BaseRestClient {
     String baseUrl = this.baseUrl;
     if (subDomain != null) {
       final baseUri = Uri.tryParse(baseUrl);
-      final splitHost = baseUri.host.split('.');
-      splitHost[0] = subDomain;
+      var splitHost = baseUri.host.split('.');
+      if (splitHost.length >= 3) {
+        splitHost[0] = subDomain;
+      } else {
+        splitHost.insert(0, subDomain);
+      }
       final newHost = splitHost.join('.');
       baseUri.replace(host: newHost);
       baseUrl = baseUri.toString();
