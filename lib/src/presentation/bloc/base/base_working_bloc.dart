@@ -45,7 +45,7 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
     listen((state) {
       _statesSubject.add(state);
     });
-    subscription = eventStream.listen(_handler, onError: (e, s) {
+    subscription = eventStream.listen(handleEvent, onError: (e, s) {
       print(this);
       print(e);
       print(s);
@@ -54,9 +54,9 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
     source?.pipe(eventSink);
   }
 
-  Output Function(Input input) get converter => null;
+  Output Function(Input input) get converter;
 
-  void _handler(provider.ProviderState event) {
+  void handleEvent(provider.ProviderState event) {
     if (event is provider.ProviderLoadingState<Input>) {
       emitLoading();
     } else if (event is provider.ProviderLoadedState<Input>) {

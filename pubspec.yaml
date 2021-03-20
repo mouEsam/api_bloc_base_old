@@ -17,6 +17,7 @@ dependencies:
   dartz: ^0.9.1
   flutter_bloc: ^6.1.1
   dio: ^3.0.10
+  dio_cache_interceptor: ^1.0.0
   sembast: ^2.4.8
   path_provider: ^1.6.24
   flutter_secure_storage: ^3.3.5
