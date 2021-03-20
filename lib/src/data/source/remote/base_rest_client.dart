@@ -77,6 +77,7 @@ class BaseRestClient {
     CancelToken cancelToken,
     String authorizationToken,
     Params params,
+    String subDomain = 'www',
     dynamic acceptedLanguage,
     CacheOptions options,
     Map<String, dynamic> extra,
@@ -139,6 +140,15 @@ class BaseRestClient {
       progressController.add(progress);
       return progress;
     };
+    String baseUrl = this.baseUrl;
+    if (subDomain != null) {
+      final baseUri = Uri.tryParse(baseUrl);
+      final splitHost = baseUri.host.split('.');
+      splitHost[0] = subDomain;
+      final newHost = splitHost.join('.');
+      baseUri.replace(host: newHost);
+      baseUrl = baseUri.toString();
+    }
     final result = dio.request<Map<String, dynamic>>(path,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
