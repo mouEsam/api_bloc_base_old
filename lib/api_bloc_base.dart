@@ -2,6 +2,10 @@ library api_bloc_base;
 
 export 'package:dio/dio.dart';
 export 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+export 'package:sembast/blob.dart';
+export 'package:sembast/sembast.dart';
+export 'package:sembast/sembast_io.dart';
+export 'package:sembast/timestamp.dart';
 
 export 'src/data/model/remote/base_api_response.dart';
 export 'src/data/model/remote/base_errors.dart';
