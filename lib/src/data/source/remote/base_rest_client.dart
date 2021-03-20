@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
@@ -35,12 +36,39 @@ class BaseRestClient {
   final String baseUrl;
   final Dio dio;
 
-  BaseRestClient(this.baseUrl) : dio = Dio() {
-    dio.options.connectTimeout = 15000;
-    dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
-    dio.options.receiveDataWhenStatusError = true;
-    dio.options.validateStatus = (_) => true;
-    dio.transformer = CustomTransformer();
+  BaseRestClient(this.baseUrl,
+      {Iterable<Interceptor> interceptors = const [],
+      CacheOptions cacheOptions,
+      BaseOptions options})
+      : dio = Dio() {
+    dio.interceptors.addAll(interceptors);
+    cacheOptions = CacheOptions(
+      store: cacheOptions?.store ?? DbCacheStore(), // Required.
+      policy: cacheOptions?.policy ??
+          CachePolicy
+              .requestFirst, // Default. Requests first and caches response.
+      hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ??
+          [
+            401,
+            403
+          ], // Optional. Returns a cached response on error if available but for statuses 401 & 403.
+      priority: cacheOptions?.priority ??
+          CachePriority
+              .normal, // Optional. Default. Allows 3 cache levels and ease cleanup.
+      maxStale: cacheOptions?.maxStale ??
+          const Duration(
+              days:
+                  7), // Very optional. Overrides any HTTP directive to delete entry past this duration.
+    );
+    if (options == null) {
+      dio.options.connectTimeout = 15000;
+      dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
+      dio.options.receiveDataWhenStatusError = true;
+      dio.options.validateStatus = (_) => true;
+      dio.transformer = CustomTransformer();
+    } else {
+      dio.options = options;
+    }
   }
 
   RequestResult<T> request<T>(
@@ -50,6 +78,7 @@ class BaseRestClient {
     String authorizationToken,
     Params params,
     dynamic acceptedLanguage,
+    CacheOptions options,
     Map<String, dynamic> extra,
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
@@ -66,6 +95,7 @@ class BaseRestClient {
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
+    extra.addAll(options?.toExtra() ?? <String, dynamic>{});
     queryParameters ??= <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
     headers ??= <String, dynamic>{};
