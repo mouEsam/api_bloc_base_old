@@ -19,6 +19,7 @@ export 'working_state.dart';
 abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
+  String get notFoundMessage => 'foundNothing';
   String get loading => 'loading';
   String get defaultError => 'Error';
 
@@ -60,10 +61,19 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
     if (event is provider.ProviderLoadingState<Input>) {
       emitLoading();
     } else if (event is provider.ProviderLoadedState<Input>) {
-      currentData = converter(event.data);
-      emitLoaded();
+      handleData(event.data);
     } else if (event is provider.ProviderErrorState<Input>) {
       emit(ErrorState<Output>(event.message));
+    }
+  }
+
+  @mustCallSuper
+  void handleData(Input event) {
+    if (event == null) {
+      emit(ErrorState<Output>(notFoundMessage));
+    } else {
+      currentData = converter(event);
+      emitLoaded();
     }
   }
 

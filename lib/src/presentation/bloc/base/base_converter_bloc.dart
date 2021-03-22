@@ -10,9 +10,6 @@ export 'working_state.dart';
 
 abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Input, Output> {
-  String get notFoundMessage => 'foundNothing';
-  String get defaultError => 'Error';
-
   StreamSubscription _subscription;
 
   final _inputSubject = BehaviorSubject<Input>();
@@ -27,15 +24,6 @@ abstract class BaseConverterBloc<Input, Output>
       print(s);
       emit(ErrorState(defaultError));
     });
-  }
-
-  void handleData(Input event) {
-    if (event == null) {
-      emit(ErrorState<Output>(notFoundMessage));
-    } else {
-      currentData = converter(event);
-      emitLoaded();
-    }
   }
 
   @override

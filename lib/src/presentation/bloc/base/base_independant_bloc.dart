@@ -15,22 +15,45 @@ abstract class BaseIndependentBloc<Output>
 
   BaseIndependentBloc({this.sources = const [], Output currentData})
       : super(currentData: currentData) {
-    Stream<Output> finalStream;
+    Stream<provider.ProviderState<Output>> finalStream;
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources).asBroadcastStream();
-      finalStream = CombineLatestStream.combine2<dynamic, Output, Output>(
-              stream, originalDataStream, combineData)
-          .asBroadcastStream();
+      finalStream = CombineLatestStream.combine2<List, Output,
+              provider.ProviderState<Output>>(stream, originalDataStream,
+          (list, data) {
+        provider.ProviderErrorState error = list.firstWhere(
+            (element) => element is provider.ProviderErrorState,
+            orElse: () => null);
+        if (error != null) {
+          return provider.ProviderErrorState<Output>(error.message);
+        }
+        provider.ProviderLoadingState loading = list.firstWhere(
+            (element) => element is provider.ProviderLoadingState,
+            orElse: () => null);
+        if (loading != null) {
+          return provider.ProviderLoadingState<Output>();
+        }
+        provider.InvalidatedState invalidated = list.firstWhere(
+            (element) => element is provider.InvalidatedState,
+            orElse: () => null);
+        if (invalidated != null) {
+          return provider.InvalidatedState<Output>();
+        }
+        return provider.ProviderLoadedState<Output>(data);
+      }).asBroadcastStream();
     } else {
       finalStream = originalDataStream
-          .map((event) => combineData([], event))
+          .map((data) => provider.ProviderLoadedState<Output>(data))
           .asBroadcastStream();
     }
-    finalStream.doOnEach((notification) => emitLoading()).listen(handleData);
+    finalStream.doOnEach((notification) => emitLoading()).listen(handleEvent);
   }
 
-  Output combineData(List events, Output data) {
-    return data;
+  Output combineData(Output data) => data;
+
+  void handleData(Output event) {
+    final data = combineData(event);
+    super.handleData(data);
   }
 
   final _ownDataSubject = BehaviorSubject<Output>();
