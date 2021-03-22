@@ -7,6 +7,7 @@ export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';
 export 'package:sembast/timestamp.dart';
 
+export 'src/data/model/remote/auth_params.dart';
 export 'src/data/model/remote/base_api_response.dart';
 export 'src/data/model/remote/base_errors.dart';
 export 'src/data/model/remote/params.dart';
@@ -19,6 +20,7 @@ export 'src/domain/entity/base_profile.dart';
 export 'src/domain/entity/entity.dart';
 export 'src/domain/entity/response_entity.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
+export 'src/presentation/bloc/base/base_independant_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';

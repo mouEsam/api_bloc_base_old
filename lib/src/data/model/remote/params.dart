@@ -4,7 +4,7 @@ part 'params.g.dart';
 
 @JsonSerializable(createFactory: false)
 class Params {
-  Params();
+  const Params();
 
   Map<String, dynamic> toMap() => _$ParamsToJson(this);
 }

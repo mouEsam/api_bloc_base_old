@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/data/model/remote/params.dart';
+import 'package:api_bloc_base/src/data/model/remote/auth_params.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/data/source/local/user_defaults.dart';
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
@@ -33,7 +33,6 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
       });
 
   BaseProfile get currentUser => _userAccount.value;
-  bool firstLoginEmit = true;
 
   BaseUserBloc(this.userDefaults) : super(UserLoadingState()) {
     autoSignIn();
@@ -41,7 +40,6 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
       _timer?.cancel();
       BaseProfile user;
       if (state is SignedOutState) {
-        firstLoginEmit = true;
         _detailsSubscription?.cancel();
       } else if (state is BaseSignedInState) {
         user = state.userAccount;
@@ -57,7 +55,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
 
   Future<Either<ResponseEntity, BaseProfile>> autoSignIn([bool silent = true]);
 
-  Result<Either<ResponseEntity, BaseProfile>> login<T extends Params>(T params);
+  Result<Either<ResponseEntity, BaseProfile>> login(AuthParams params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
@@ -108,8 +106,6 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
       emitSignedUser(user);
     }
   }
-
-  bool isFirstLogin(BaseProfile user);
 
   void emitSignedUser(BaseProfile user);
 
