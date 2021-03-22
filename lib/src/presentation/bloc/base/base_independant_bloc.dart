@@ -19,10 +19,10 @@ abstract class BaseIndependentBloc<Output>
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources).asBroadcastStream();
       finalStream = CombineLatestStream.combine2<dynamic, Output, Output>(
-              stream, _ownDataSubject, combineData)
+              stream, originalDataStream, combineData)
           .asBroadcastStream();
     } else {
-      finalStream = _ownDataSubject
+      finalStream = originalDataStream
           .map((event) => combineData([], event))
           .asBroadcastStream();
     }
@@ -34,6 +34,7 @@ abstract class BaseIndependentBloc<Output>
   }
 
   final _ownDataSubject = BehaviorSubject<Output>();
+  Stream<Output> get originalDataStream => _ownDataSubject.shareValue();
 
   Output Function(Output input) get converter => (data) => data;
   Result<Either<ResponseEntity, Output>> get dataSource;
