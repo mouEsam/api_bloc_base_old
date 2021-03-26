@@ -8,7 +8,7 @@ part 'base_api_response.g.dart';
 
 @JsonSerializable()
 class BaseApiResponse {
-  BaseApiResponse(
+  const BaseApiResponse(
     this.success,
     this.message,
     this.error,

@@ -11,10 +11,10 @@ export 'working_state.dart';
 
 abstract class BaseIndependentBloc<Output>
     extends BaseConverterBloc<Output, Output> {
+  StreamSubscription _sub;
   final List<Stream<provider.ProviderState>> sources;
 
-  BaseIndependentBloc({this.sources = const [], Output currentData})
-      : super(currentData: currentData) {
+  Stream<provider.ProviderState<Output>> get source {
     Stream<provider.ProviderState<Output>> finalStream;
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources).asBroadcastStream();
@@ -46,18 +46,27 @@ abstract class BaseIndependentBloc<Output>
           .map((data) => provider.ProviderLoadedState<Output>(data))
           .asBroadcastStream();
     }
-    finalStream.doOnEach((notification) => emitLoading()).listen(handleEvent);
+    return finalStream;
+  }
+
+  BaseIndependentBloc({this.sources = const [], Output currentData})
+      : super(currentData: currentData) {
+    finalDataStream.listen(super.handleData);
   }
 
   Output combineData(Output data) => data;
 
+  // ignore: must_call_super
   void handleData(Output event) {
     final data = combineData(event);
-    super.handleData(data);
+    _finalDataSubject.add(data);
   }
 
   final _ownDataSubject = BehaviorSubject<Output>();
   Stream<Output> get originalDataStream => _ownDataSubject.shareValue();
+
+  final _finalDataSubject = BehaviorSubject<Output>();
+  Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
 
   Output Function(Output input) get converter => (data) => data;
   Result<Either<ResponseEntity, Output>> get dataSource;
@@ -85,7 +94,9 @@ abstract class BaseIndependentBloc<Output>
 
   @override
   Future<void> close() {
+    _sub?.cancel();
     _ownDataSubject.drain().then((value) => _ownDataSubject.close());
+    _finalDataSubject.drain().then((value) => _finalDataSubject.close());
     return super.close();
   }
 }

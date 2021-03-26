@@ -70,6 +70,11 @@ abstract class BaseModelConverter<Input, Output> {
 
   Output convert(Input initialData);
 
+  Output convertSingle(Input initialData) {
+    final result = initialData == null ? null : convert(initialData);
+    return result;
+  }
+
   List<Output> convertList(List<Input> initialData) {
     final result =
         initialData?.map((itemModel) => convert(itemModel))?.toList() ??

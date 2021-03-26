@@ -7,8 +7,14 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+
+enum RequestBodyType {
+  FormData,
+  Json,
+}
 
 enum RequestMethod {
   POST,
@@ -65,7 +71,8 @@ class BaseRestClient {
       dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
       dio.options.receiveDataWhenStatusError = true;
       dio.options.validateStatus = (_) => true;
-      dio.transformer = CustomTransformer();
+      // dio.transformer = CustomTransformer();
+      dio.transformer = FlutterTransformer();
     } else {
       dio.options = options;
     }
@@ -83,6 +90,7 @@ class BaseRestClient {
     Map<String, dynamic> extra,
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
+    RequestBodyType requestBodyType = RequestBodyType.FormData,
     T Function(Map<String, dynamic>) fromJson,
   }) {
     if (T == BaseApiResponse) {
@@ -108,29 +116,35 @@ class BaseRestClient {
     if (authorizationToken != null) {
       headers[HttpHeaders.authorizationHeader] = 'Bearer $authorizationToken';
     }
-    final _data = FormData();
+    dynamic body;
     final formData = params?.toMap();
     // formData?.removeWhere((key, value) => value == null);
     if (formData != null && formData.isNotEmpty) {
-      for (final entry in formData.entries) {
-        if (entry.value != null) {
-          if (entry.value is File) {
-            final file = entry.value as File;
-            // final fileToUpload = MultipartFile.fromBytes(file.readAsBytesSync(),
-            //     filename: file.name);
-            // _data.files.add(MapEntry(entry.key, fileToUpload));
-            _data.files.add(MapEntry(
-                entry.key,
-                MultipartFile.fromFileSync(file.path,
-                    filename: file.path.split(Platform.pathSeparator).last)));
-          } else if (entry.value is List) {
-            final list = entry.value as List;
-            list.where((e) => e != null).forEach((value) =>
-                _data.fields.add(MapEntry(entry.key, value.toString())));
-          } else {
-            _data.fields.add(MapEntry(entry.key, entry.value.toString()));
+      switch (requestBodyType) {
+        case RequestBodyType.FormData:
+          final _data = FormData();
+          for (final entry in formData.entries) {
+            if (entry.value != null) {
+              if (entry.value is File) {
+                final file = entry.value as File;
+                _data.files.add(MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(file.path,
+                        filename:
+                            file.path.split(Platform.pathSeparator).last)));
+              } else if (entry.value is List) {
+                final list = entry.value as List;
+                list.where((e) => e != null).forEach((value) =>
+                    _data.fields.add(MapEntry(entry.key, value.toString())));
+              } else {
+                _data.fields.add(MapEntry(entry.key, entry.value.toString()));
+              }
+            }
           }
-        }
+          body = _data;
+          break;
+        case RequestBodyType.Json:
+          body = jsonEncode(formData);
       }
     }
     final _progressListener = (int count, int total) {
@@ -163,7 +177,7 @@ class BaseRestClient {
             headers: headers,
             extra: extra,
             baseUrl: baseUrl),
-        data: _data);
+        data: body);
     final response = result.then((result) {
       print(result.data);
       final T value = fromJson?.call(result.data) ?? result.data;
