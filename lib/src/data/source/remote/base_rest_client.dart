@@ -81,6 +81,7 @@ class BaseRestClient {
   RequestResult<T> request<T>(
     RequestMethod method,
     String path, {
+    T mockedResult,
     CancelToken cancelToken,
     String authorizationToken,
     Params params,
@@ -167,20 +168,44 @@ class BaseRestClient {
       baseUri.replace(host: newHost);
       baseUrl = baseUri.toString();
     }
-    final result = dio.request<Map<String, dynamic>>(path,
-        queryParameters: queryParameters,
-        cancelToken: cancelToken,
-        onReceiveProgress: _progressListener,
-        onSendProgress: _progressListener,
-        options: RequestOptions(
+    Future<Response<Map<String, dynamic>>> result;
+    if (mockedResult == null) {
+      result = dio.request<Map<String, dynamic>>(path,
+          queryParameters: queryParameters,
+          cancelToken: cancelToken,
+          onReceiveProgress: _progressListener,
+          onSendProgress: _progressListener,
+          options: RequestOptions(
+              method: method.method,
+              headers: headers,
+              extra: extra,
+              baseUrl: baseUrl),
+          data: body);
+    } else {
+      result = Future.value(Response<Map<String, dynamic>>(
+        headers: Headers(),
+        data: {},
+        isRedirect: false,
+        extra: extra,
+        request: RequestOptions(
             method: method.method,
             headers: headers,
             extra: extra,
             baseUrl: baseUrl),
-        data: body);
+        statusCode: 200,
+        statusMessage: 'success',
+      ));
+      _progressListener(100, 100);
+      _progressListener(100, 100);
+    }
     final response = result.then((result) {
       print(result.data);
-      final T value = fromJson?.call(result.data) ?? result.data;
+      T value;
+      if (mockedResult == null) {
+        value = fromJson?.call(result.data) ?? result.data;
+      } else {
+        value = mockedResult;
+      }
       return Response<T>(
           data: value,
           extra: result.extra,
