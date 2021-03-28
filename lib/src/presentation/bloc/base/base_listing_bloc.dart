@@ -14,8 +14,8 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
   final int searchDelayMillis;
 
   get finalDataStream =>
-      CombineLatestStream.combine3<Filtering, Output, String, Output>(
-              _filterSubject, super.finalDataStream, _queryStream, applyFilter)
+      CombineLatestStream.combine3<Output, Filtering, String, Output>(
+              super.finalDataStream, _filterSubject, _queryStream, applyFilter)
           .asBroadcastStream();
 
   BaseListingBloc(
@@ -24,7 +24,7 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
       Output currentData})
       : super(sources: sources, currentData: currentData);
 
-  Output applyFilter(Filtering filter, Output output, String query) {
+  Output applyFilter(Output output, Filtering filter, String query) {
     return output;
   }
 
