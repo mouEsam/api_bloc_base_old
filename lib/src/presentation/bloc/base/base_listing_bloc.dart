@@ -38,7 +38,7 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
   Stream<String> get _queryStream => _querySubject
       .shareValue()
       .debounceTime(Duration(milliseconds: searchDelayMillis));
-  String get clubQuery => _querySubject.value;
+  String get query => _querySubject.value;
   set query(String query) {
     _querySubject.add(query);
   }
