@@ -84,6 +84,7 @@ abstract class BaseIndependentBloc<Output>
     final future = await result.resultFuture;
     return future.fold<Output>(
       (l) {
+        emit(ErrorState(l.message));
         return null;
       },
       (r) {
