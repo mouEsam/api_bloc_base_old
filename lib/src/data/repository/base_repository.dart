@@ -38,6 +38,7 @@ abstract class BaseRepository {
         result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S result;
+      print(converter.hasData(data));
       if (converter.hasData(data)) {
         interceptData?.call(data);
         result = converter.convert(data);

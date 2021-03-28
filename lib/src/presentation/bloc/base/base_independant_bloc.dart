@@ -44,6 +44,7 @@ abstract class BaseIndependentBloc<Output>
     } else {
       finalStream = originalDataStream
           .map((data) => provider.ProviderLoadedState<Output>(data))
+          .cast<provider.ProviderState<Output>>()
           .asBroadcastStream();
     }
     return finalStream;
