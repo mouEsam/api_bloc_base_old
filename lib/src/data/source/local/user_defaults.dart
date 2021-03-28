@@ -4,9 +4,9 @@ import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class UserDefaults {
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
   final BaseProfile Function(Map<String, dynamic> json) profileFactory;
-  UserDefaults(this.profileFactory);
+  const UserDefaults(this.profileFactory);
 }
 
 extension UserToken on UserDefaults {
