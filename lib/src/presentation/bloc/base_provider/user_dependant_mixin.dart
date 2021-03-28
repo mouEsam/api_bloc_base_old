@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/api_bloc_base.dart';
-import 'package:api_bloc_base/src/presentation/bloc/user/base_uslutter_bloc.dart';
+import '../../../../api_bloc_base.dart';
+import 'base_provider_bloc.dart';
 
 mixin UserDependantProviderMixin<Data> on BaseProviderBloc<Data> {
   BaseUserBloc get userBloc => null;
