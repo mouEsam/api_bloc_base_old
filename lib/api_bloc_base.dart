@@ -21,6 +21,7 @@ export 'src/domain/entity/entity.dart';
 export 'src/domain/entity/response_entity.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_independant_bloc.dart';
+export 'src/presentation/bloc/base/base_listing_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/working_state.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';
