@@ -57,7 +57,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]);
 
-  Result<Either<ResponseEntity, T>> login(AuthParams params);
+  Result<Either<ResponseEntity, T>> login(BaseAuthParams params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 

@@ -4,8 +4,8 @@ import 'package:json_annotation/json_annotation.dart';
 part 'auth_params.g.dart';
 
 @JsonSerializable(createFactory: false)
-class AuthParams extends Params {
-  const AuthParams();
+class BaseAuthParams extends Params {
+  const BaseAuthParams();
 
-  Map<String, dynamic> toMap() => _$AuthParamsToJson(this);
+  Map<String, dynamic> toMap() => _$BaseAuthParamsToJson(this);
 }
