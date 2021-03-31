@@ -2,7 +2,7 @@ import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class BaseUserState extends Equatable {
-  BaseUserState();
+  const BaseUserState();
 
   @override
   bool get stringify => true;
@@ -12,16 +12,16 @@ abstract class BaseUserState extends Equatable {
 }
 
 class UserLoadingState extends BaseUserState {
-  UserLoadingState();
+  const UserLoadingState();
 
   @override
   List<Object> get props => [];
 }
 
-abstract class BaseSignedInState extends BaseUserState {
-  final BaseProfile userAccount;
+abstract class BaseSignedInState<T extends BaseProfile> extends BaseUserState {
+  final T userAccount;
 
-  BaseSignedInState(this.userAccount);
+  const BaseSignedInState(this.userAccount);
 
   @override
   List<Object> get props => [
@@ -30,5 +30,5 @@ abstract class BaseSignedInState extends BaseUserState {
 }
 
 class SignedOutState extends BaseUserState {
-  SignedOutState();
+  const SignedOutState();
 }

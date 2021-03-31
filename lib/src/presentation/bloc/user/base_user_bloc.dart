@@ -23,6 +23,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   StreamSubscription<T> _detailsSubscription;
   Stream<T> get userStream => _userAccount.shareValue();
+  StreamSink<T> get userSink => _userAccount.sink;
 
   Stream<provider.ProviderState<T>> get profileStream =>
       userStream.map<provider.ProviderState<T>>((event) {
