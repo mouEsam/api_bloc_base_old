@@ -13,18 +13,19 @@ import 'package:rxdart/rxdart.dart';
 
 import 'base_user_state.dart';
 
-abstract class BaseUserBloc extends Cubit<BaseUserState> {
+abstract class BaseUserBloc<T extends BaseProfile>
+    extends Cubit<BaseUserState> {
   Timer _timer;
 
   final UserDefaults userDefaults;
 
-  final _userAccount = BehaviorSubject<BaseProfile>();
+  final _userAccount = BehaviorSubject<T>();
 
-  StreamSubscription<BaseProfile> _detailsSubscription;
-  Stream<BaseProfile> get userStream => _userAccount.shareValue();
+  StreamSubscription<T> _detailsSubscription;
+  Stream<T> get userStream => _userAccount.shareValue();
 
-  Stream<provider.ProviderState<BaseProfile>> get profileStream =>
-      userStream.map<provider.ProviderState<BaseProfile>>((event) {
+  Stream<provider.ProviderState<T>> get profileStream =>
+      userStream.map<provider.ProviderState<T>>((event) {
         if (event != null) {
           return provider.ProviderLoadedState(event);
         } else {
@@ -32,13 +33,13 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
         }
       });
 
-  BaseProfile get currentUser => _userAccount.value;
+  T get currentUser => _userAccount.value;
 
   BaseUserBloc(this.userDefaults) : super(UserLoadingState()) {
     autoSignIn();
     listen((state) {
       _timer?.cancel();
-      BaseProfile user;
+      T user;
       if (state is SignedOutState) {
         _detailsSubscription?.cancel();
       } else if (state is BaseSignedInState) {
@@ -53,9 +54,9 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
 
   bool shouldProfileRefresh(BaseSignedInState state) => true;
 
-  Future<Either<ResponseEntity, BaseProfile>> autoSignIn([bool silent = true]);
+  Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]);
 
-  Result<Either<ResponseEntity, BaseProfile>> login(AuthParams params);
+  Result<Either<ResponseEntity, T>> login(AuthParams params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
@@ -91,7 +92,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     return Result(resultFuture: result);
   }
 
-  Future<void> handleUser(BaseProfile user) async {
+  Future<void> handleUser(T user) async {
     print(user);
     if (user == null) {
       userDefaults.setSignedAccount(null);
@@ -107,7 +108,7 @@ abstract class BaseUserBloc extends Cubit<BaseUserState> {
     }
   }
 
-  void emitSignedUser(BaseProfile user);
+  void emitSignedUser(T user);
 
   @override
   Future<void> close() {

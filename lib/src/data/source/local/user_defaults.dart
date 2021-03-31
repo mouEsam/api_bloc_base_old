@@ -27,6 +27,7 @@ extension UserToken on UserDefaults {
 extension SignedInAccount on UserDefaults {
   static const _SIGNED_ACCOUNT = 'signed_in_account';
   Future<void> setSignedAccount(BaseProfile profile) {
+    print('saving account $profile');
     final json = jsonEncode(profile?.toJson());
     if (json == null) {
       return storage.delete(key: _SIGNED_ACCOUNT);
