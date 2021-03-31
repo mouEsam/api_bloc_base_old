@@ -70,6 +70,7 @@ abstract class BaseIndependentBloc<Output>
   Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
 
   Output Function(Output input) get converter => (data) => data;
+
   Result<Either<ResponseEntity, Output>> get dataSource;
 
   void getData() {
