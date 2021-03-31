@@ -16,6 +16,7 @@ import 'base_user_state.dart';
 abstract class BaseUserBloc<T extends BaseProfile>
     extends Cubit<BaseUserState> {
   Timer _timer;
+  bool firstLoginEmit = true;
 
   final UserDefaults userDefaults;
 
@@ -104,9 +105,13 @@ abstract class BaseUserBloc<T extends BaseProfile>
         userDefaults.setSignedAccount(user);
         userDefaults.setUserToken(user.accessToken);
       }
-      //firstLoginEmit = isFirstLogin(user);
+      firstLoginEmit = isFirstLogin(user);
       emitSignedUser(user);
     }
+  }
+
+  bool isFirstLogin(BaseProfile user) {
+    return firstLoginEmit;
   }
 
   void emitSignedUser(T user);
