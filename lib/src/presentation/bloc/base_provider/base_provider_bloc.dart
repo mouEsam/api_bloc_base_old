@@ -99,10 +99,10 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
       }
       print('${state} ${enableRetry}');
       if (refreshInterval != null) {
-        if (state is ProviderErrorState && enableRetry) {
+        if (state is ProviderErrorState) {
           _retrialTimer?.cancel();
           _retrialTimer = Timer(refreshInterval, getData);
-        } else if (state is ProviderLoadedState) {
+        } else if (state is ProviderLoadedState && enableRetry) {
           _retrialTimer?.cancel();
           _retrialTimer = Timer.periodic(refreshInterval, (_) => refresh());
         }
