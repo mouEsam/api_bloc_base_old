@@ -48,6 +48,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
   BaseProviderBloc(
       {Data initialDate,
       bool enableRetry = true,
+      bool enableRefresh = true,
       bool getOnCreate = true,
       this.observer})
       : super(ProviderLoadingState()) {
@@ -55,7 +56,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     if (initialDate != null) {
       emit(ProviderLoadedState(initialDate));
     }
-    _setUpListener(enableRetry);
+    _setUpListener(enableRetry, enableRefresh);
     if (getOnCreate) {
       startTries();
     }
@@ -90,19 +91,18 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
   @override
   void onInactive() {}
 
-  void _setUpListener(bool enableRetry) {
+  void _setUpListener(bool enableRetry, bool enableRefresh) {
     listen((state) {
       if (state is InvalidatedState) {
         getData();
       } else {
         _handleState(state);
       }
-      print('${state} ${enableRetry}');
       if (refreshInterval != null) {
-        if (state is ProviderErrorState) {
+        if (state is ProviderErrorState && enableRetry) {
           _retrialTimer?.cancel();
           _retrialTimer = Timer(refreshInterval, getData);
-        } else if (state is ProviderLoadedState && enableRetry) {
+        } else if (state is ProviderLoadedState && enableRefresh) {
           _retrialTimer?.cancel();
           _retrialTimer = Timer.periodic(refreshInterval, (_) => refresh());
         }
