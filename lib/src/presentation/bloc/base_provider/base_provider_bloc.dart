@@ -66,6 +66,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     green = true;
     shouldBeGreen = userLogStateEvent || shouldBeGreen;
     if (userLogStateEvent) {
+       _subscription?.cancel();
        _subscription = null;
     } else {
     _subscription?.resume();
