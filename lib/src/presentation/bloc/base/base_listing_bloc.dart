@@ -16,7 +16,7 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
   get finalDataStream =>
       CombineLatestStream.combine3<Output, Filtering, String, Output>(
               super.finalDataStream, _filterSubject, _queryStream, applyFilter)
-          .asBroadcastStream();
+          .asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   BaseListingBloc(
       {this.searchDelayMillis = 1000,

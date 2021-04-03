@@ -17,7 +17,8 @@ abstract class BaseIndependentBloc<Output>
   Stream<provider.ProviderState<Output>> get source {
     Stream<provider.ProviderState<Output>> finalStream;
     if (sources.isNotEmpty) {
-      final stream = CombineLatestStream.list(sources).asBroadcastStream();
+      final stream = CombineLatestStream.list(sources)
+          .asBroadcastStream(onCancel: (sub) => sub.cancel());
       finalStream = CombineLatestStream.combine2<List, Output,
               provider.ProviderState<Output>>(stream, originalDataStream,
           (list, data) {
@@ -40,12 +41,12 @@ abstract class BaseIndependentBloc<Output>
           return provider.InvalidatedState<Output>();
         }
         return provider.ProviderLoadedState<Output>(data);
-      }).asBroadcastStream();
+      }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     } else {
       finalStream = originalDataStream
           .map((data) => provider.ProviderLoadedState<Output>(data))
           .cast<provider.ProviderState<Output>>()
-          .asBroadcastStream();
+          .asBroadcastStream(onCancel: (sub) => sub.cancel());
     }
     return finalStream;
   }
