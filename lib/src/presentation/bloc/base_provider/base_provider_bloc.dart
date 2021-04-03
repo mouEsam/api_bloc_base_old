@@ -249,7 +249,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
         }
         return null;
       }
-    }).asBroadcastStream();
+    }).asBroadcastStream(onCancel: (sub) => sub.cancel());
   }
 
   @override
