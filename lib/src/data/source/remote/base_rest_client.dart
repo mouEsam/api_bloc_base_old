@@ -216,7 +216,7 @@ class BaseRestClient {
           statusCode: result.statusCode,
           statusMessage: result.statusMessage);
     });
-    final _stream = response.asStream().asBroadcastStream();
+    final _stream = response.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
     _stream.listen((event) {},
         onDone: () => progressController.close(),
         onError: (e, s) => progressController.close(),
@@ -224,7 +224,7 @@ class BaseRestClient {
     return RequestResult(
       cancelToken: cancelToken,
       resultFuture: response,
-      progress: progressController.stream.asBroadcastStream(),
+      progress: progressController.stream.asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
 }
