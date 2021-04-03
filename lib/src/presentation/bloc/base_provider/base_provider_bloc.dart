@@ -65,6 +65,11 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
   void startTries([bool userLogStateEvent = true]) {
     green = true;
     shouldBeGreen = userLogStateEvent || shouldBeGreen;
+    if (userLogStateEvent) {
+       _subscription = null;
+    } else {
+    _subscription?.resume();
+    }
     getData();
   }
 
@@ -72,6 +77,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     green = false;
     shouldBeGreen = !userLogStateEvent && shouldBeGreen;
     _retrialTimer?.cancel();
+    _subscription?.pause();
     emitLoading();
   }
 
@@ -207,7 +213,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     if (green && shouldBeGreen) {
       if (dataSource != null) {
         handleOperation(dataSource, refresh);
-      } else if (dataSourceStream != null) {
+      } else if (dataSourceStream != null && _subscription == null) {
         handleStream(dataSourceStream, refresh);
       }
     }
