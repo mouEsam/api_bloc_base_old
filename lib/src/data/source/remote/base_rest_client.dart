@@ -152,7 +152,7 @@ class BaseRestClient {
       final newCount = math.max(count, 0);
       final newTotal = math.max(total, 0);
       final double progress = newTotal == 0 ? 0.0 : (newCount / newTotal);
-      progressController.add(progress);
+      progressController.add(math.max(progress, 1.0));
       return progress;
     };
     String baseUrl = this.baseUrl;
