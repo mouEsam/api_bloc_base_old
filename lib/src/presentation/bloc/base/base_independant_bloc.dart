@@ -64,8 +64,8 @@ abstract class BaseIndependentBloc<Output>
     _finalDataSubject.add(data);
   }
 
-  final _ownDataSubject = BehaviorSubject<Output>();
-  Stream<Output> get originalDataStream => _ownDataSubject.shareValue();
+  final _ownDataSubject = StreamController<Output>();
+  Stream<Output> get originalDataStream => _ownDataSubject.stream;
 
   final _finalDataSubject = BehaviorSubject<Output>();
   Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
@@ -90,7 +90,9 @@ abstract class BaseIndependentBloc<Output>
         return null;
       },
       (r) {
-        _ownDataSubject.add(r);
+        if (!_ownDataSubject.isClosed) {
+          _ownDataSubject.add(r);
+        }
         return r;
       },
     );
@@ -99,7 +101,7 @@ abstract class BaseIndependentBloc<Output>
   @override
   Future<void> close() {
     _sub?.cancel();
-    _ownDataSubject.drain().then((value) => _ownDataSubject.close());
+    _ownDataSubject.close();
     _finalDataSubject.drain().then((value) => _finalDataSubject.close());
     return super.close();
   }

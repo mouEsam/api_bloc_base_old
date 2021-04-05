@@ -31,11 +31,12 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
 
   final provider.BaseProviderBloc<Input> sourceBloc;
 
-  final _eventsSubject = BehaviorSubject<provider.ProviderState<Input>>();
+  final _eventsSubject = StreamController<provider.ProviderState<Input>>();
   StreamSink<provider.ProviderState<Input>> get eventSink =>
       _eventsSubject.sink;
   Stream<provider.ProviderState<Input>> get eventStream =>
-      async.LazyStream(() => _eventsSubject.shareValue());
+      async.LazyStream(() => _eventsSubject.stream
+          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
   final _statesSubject = BehaviorSubject<BlocState<Output>>();
   Stream<BlocState<Output>> get stateStream =>
       async.LazyStream(() => _statesSubject.shareValue());
@@ -230,7 +231,7 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
   Future<void> close() {
     subscription?.cancel();
     _statesSubject.drain().then((value) => _statesSubject.close());
-    _eventsSubject.drain().then((value) => _eventsSubject.close());
+    _eventsSubject.close();
     return super.close();
   }
 }

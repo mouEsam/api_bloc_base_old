@@ -27,7 +27,8 @@ class Failure extends ResponseEntity {
 }
 
 class InternetFailure extends Failure {
-  const InternetFailure(String message, [BaseErrors errors]) : super(message);
+  const InternetFailure(String message, [BaseErrors errors])
+      : super(message, errors);
 }
 
 class Cancellation extends ResponseEntity {
