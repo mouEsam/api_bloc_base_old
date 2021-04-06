@@ -22,6 +22,7 @@ export 'src/domain/entity/response_entity.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_independant_bloc.dart';
 export 'src/presentation/bloc/base/base_listing_bloc.dart';
+export 'src/presentation/bloc/base/base_user_aware_bloc.dart';
 export 'src/presentation/bloc/base/base_user_aware_listing_bloc.dart';
 export 'src/presentation/bloc/base/base_working_bloc.dart';
 export 'src/presentation/bloc/base/user_dependant_mixin.dart';
