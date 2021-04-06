@@ -42,15 +42,14 @@ class BaseRestClient {
   final String baseUrl;
   final Dio dio;
 
-  BaseRestClient(this.baseUrl,
-      {Iterable<Interceptor> interceptors = const [],
-      CacheOptions cacheOptions,
-      BaseOptions options})
-      : dio = Dio() {
-    dio.interceptors.addAll(interceptors);
-    cacheOptions = CacheOptions(
+  CacheOptions _cacheOptions;
+
+  static CacheOptions createCacheOptions(
+      {CacheOptions cacheOptions, CachePolicy cachePolicy}) {
+    return CacheOptions(
       store: cacheOptions?.store ?? DbCacheStore(), // Required.
-      policy: cacheOptions?.policy ??
+      policy: cachePolicy ??
+          cacheOptions?.policy ??
           CachePolicy
               .requestFirst, // Default. Requests first and caches response.
       hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ??
@@ -66,6 +65,16 @@ class BaseRestClient {
               days:
                   7), // Very optional. Overrides any HTTP directive to delete entry past this duration.
     );
+  }
+
+  BaseRestClient(this.baseUrl,
+      {Iterable<Interceptor> interceptors = const [],
+      CacheOptions cacheOptions,
+      BaseOptions options})
+      : dio = Dio() {
+    dio.interceptors.addAll(interceptors);
+    _cacheOptions = createCacheOptions(cacheOptions: cacheOptions);
+    dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions));
     if (options == null) {
       dio.options.connectTimeout = 15000;
       dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
@@ -88,6 +97,7 @@ class BaseRestClient {
     String subDomain,
     dynamic acceptedLanguage,
     CacheOptions options,
+    CachePolicy cachePolicy,
     Map<String, dynamic> extra,
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
@@ -105,6 +115,10 @@ class BaseRestClient {
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
+    if (cachePolicy != null) {
+      options = createCacheOptions(
+          cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
+    }
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
     queryParameters ??= <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
@@ -216,7 +230,8 @@ class BaseRestClient {
           statusCode: result.statusCode,
           statusMessage: result.statusMessage);
     });
-    final _stream = response.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
+    final _stream =
+        response.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
     _stream.listen((event) {},
         onDone: () => progressController.close(),
         onError: (e, s) => progressController.close(),
@@ -224,7 +239,8 @@ class BaseRestClient {
     return RequestResult(
       cancelToken: cancelToken,
       resultFuture: response,
-      progress: progressController.stream.asBroadcastStream(onCancel: (sub) => sub.cancel()),
+      progress: progressController.stream
+          .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
 }
