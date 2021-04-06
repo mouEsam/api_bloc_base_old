@@ -70,10 +70,12 @@ class BaseRestClient {
   BaseRestClient(this.baseUrl,
       {Iterable<Interceptor> interceptors = const [],
       CacheOptions cacheOptions,
+      CachePolicy cachePolicy,
       BaseOptions options})
       : dio = Dio() {
     dio.interceptors.addAll(interceptors);
-    _cacheOptions = createCacheOptions(cacheOptions: cacheOptions);
+    _cacheOptions = createCacheOptions(
+        cacheOptions: cacheOptions, cachePolicy: cachePolicy);
     dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions));
     if (options == null) {
       dio.options.connectTimeout = 15000;
