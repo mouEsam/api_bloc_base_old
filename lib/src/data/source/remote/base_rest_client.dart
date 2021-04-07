@@ -93,6 +93,7 @@ class BaseRestClient {
     RequestMethod method,
     String path, {
     T mockedResult,
+    String baseUrl,
     CancelToken cancelToken,
     String authorizationToken,
     Params params,
@@ -115,6 +116,7 @@ class BaseRestClient {
       print(Map.fromEntries(
           params.toMap().entries.where((element) => element.value != null)));
     }
+    baseUrl ??= this.baseUrl;
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
     if (cachePolicy != null) {
@@ -171,9 +173,9 @@ class BaseRestClient {
       progressController.add(math.max(progress, 1.0));
       return progress;
     };
-    String baseUrl = this.baseUrl;
+    String newBaseUrl = baseUrl;
     if (subDomain != null) {
-      final baseUri = Uri.tryParse(baseUrl);
+      final baseUri = Uri.tryParse(newBaseUrl);
       var splitHost = baseUri.host.split('.');
       if (splitHost.length >= 3) {
         splitHost[0] = subDomain;
@@ -182,7 +184,7 @@ class BaseRestClient {
       }
       final newHost = splitHost.join('.');
       baseUri.replace(host: newHost);
-      baseUrl = baseUri.toString();
+      newBaseUrl = baseUri.toString();
     }
     Future<Response<Map<String, dynamic>>> result;
     if (mockedResult == null) {
@@ -195,7 +197,7 @@ class BaseRestClient {
               method: method.method,
               headers: headers,
               extra: extra,
-              baseUrl: baseUrl),
+              baseUrl: newBaseUrl),
           data: body);
     } else {
       result = Future.value(Response<Map<String, dynamic>>(
@@ -207,7 +209,7 @@ class BaseRestClient {
             method: method.method,
             headers: headers,
             extra: extra,
-            baseUrl: baseUrl),
+            baseUrl: newBaseUrl),
         statusCode: 200,
         statusMessage: 'success',
       ));

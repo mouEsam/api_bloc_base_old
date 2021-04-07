@@ -112,4 +112,31 @@ abstract class BaseRepository {
         resultFuture: future,
         progress: result.progress);
   }
+
+  Result<z.Either<ResponseEntity, S>> handleOperation<S>(
+    RequestResult<S> result, {
+    void Function(S) interceptResult,
+  }) {
+    final cancelToken = result.cancelToken;
+    final future =
+        result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
+      final data = value.data;
+      return z.Right<ResponseEntity, S>(data);
+    }).catchError((e, s) async {
+      print(e);
+      print(s);
+      if (e is DioError && e.type == DioErrorType.CANCEL) {
+        return z.Left<ResponseEntity, S>(
+          Cancellation(),
+        );
+      }
+      return z.Left<ResponseEntity, S>(
+        InternetFailure(internetError),
+      );
+    });
+    return Result<z.Either<ResponseEntity, S>>(
+        cancelToken: cancelToken,
+        resultFuture: future,
+        progress: result.progress);
+  }
 }
