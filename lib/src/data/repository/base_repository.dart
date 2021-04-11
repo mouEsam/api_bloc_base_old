@@ -121,6 +121,7 @@ abstract class BaseRepository {
     final future =
         result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
+      interceptResult?.call(data);
       return z.Right<ResponseEntity, S>(data);
     }).catchError((e, s) async {
       print(e);
