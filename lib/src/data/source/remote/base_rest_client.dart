@@ -105,7 +105,7 @@ class BaseRestClient {
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
-    T Function(Map<String, dynamic>) fromJson,
+    T Function(dynamic) fromJson,
   }) {
     if (T == BaseApiResponse) {
       throw FlutterError(
@@ -264,7 +264,6 @@ class BaseRestClient {
     Map<String, dynamic> headers,
     Map<String, dynamic> queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
-    T Function(Map<String, dynamic>) fromJson,
   }) {
     if (T == BaseApiResponse) {
       throw FlutterError(
