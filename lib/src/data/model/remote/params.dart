@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'params.g.dart';
 
-@JsonSerializable(createFactory: false)
+@JsonSerializable(createFactory: false, includeIfNull: false)
 class Params {
   const Params();
 
