@@ -74,10 +74,10 @@ abstract class BaseIndependentBloc<Output>
 
   Result<Either<ResponseEntity, Output>> get dataSource;
 
-  void getData() {
+  Future<Output> getData() {
     super.getData();
     final data = dataSource;
-    handleDataRequest(data);
+    return handleDataRequest(data);
   }
 
   Future<Output> handleDataRequest(
