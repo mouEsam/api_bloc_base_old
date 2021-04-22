@@ -66,10 +66,10 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     green = true;
     shouldBeGreen = userLogStateEvent || shouldBeGreen;
     if (userLogStateEvent) {
-       _subscription?.cancel();
-       _subscription = null;
+      _subscription?.cancel();
+      _subscription = null;
     } else {
-    _subscription?.resume();
+      _subscription?.resume();
     }
     getData();
   }
@@ -210,22 +210,24 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
   }
 
   @mustCallSuper
-  void getData({bool refresh = false}) {
+  Future<Data> getData({bool refresh = false}) async {
     if (green && shouldBeGreen) {
       if (dataSource != null) {
-        handleOperation(dataSource, refresh);
+        return handleOperation(dataSource, refresh);
       } else if (dataSourceStream != null && _subscription == null) {
-        handleStream(dataSourceStream, refresh);
+        await handleStream(dataSourceStream, refresh);
+        return null;
       }
     }
+    return null;
   }
 
   void invalidate() {
     emit(InvalidatedState<Data>());
   }
 
-  void refresh() {
-    getData(refresh: true);
+  Future<Data> refresh() {
+    return getData(refresh: true);
   }
 
   void emitLoading() {

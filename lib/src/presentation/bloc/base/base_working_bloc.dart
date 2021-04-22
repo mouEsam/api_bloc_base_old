@@ -230,6 +230,7 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
 
   @mustCallSuper
   Future<Output> refresh() async {
+    sourceBloc?.refresh();
     return getData(true);
   }
 
