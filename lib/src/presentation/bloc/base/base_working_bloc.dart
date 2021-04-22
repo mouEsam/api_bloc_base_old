@@ -228,6 +228,11 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
     return null;
   }
 
+  @mustCallSuper
+  Future<Output> refresh() async {
+    return getData(true);
+  }
+
   @override
   Future<void> close() {
     subscription?.cancel();
