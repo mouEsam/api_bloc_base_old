@@ -223,8 +223,9 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
   }
 
   @mustCallSuper
-  void getData() {
-    emitLoading();
+  Future<Output> getData([bool refresh = false]) async {
+    if (!refresh) emitLoading();
+    return null;
   }
 
   @override

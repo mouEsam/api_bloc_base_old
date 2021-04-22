@@ -74,15 +74,15 @@ abstract class BaseIndependentBloc<Output>
 
   Result<Either<ResponseEntity, Output>> get dataSource;
 
-  Future<Output> getData() {
-    super.getData();
+  Future<Output> getData([bool refresh = false]) {
+    super.getData(refresh);
     final data = dataSource;
-    return handleDataRequest(data);
+    return handleDataRequest(data, refresh);
   }
 
   Future<Output> handleDataRequest(
-      Result<Either<ResponseEntity, Output>> result) async {
-    emitLoading();
+      Result<Either<ResponseEntity, Output>> result, bool refresh) async {
+    if (!refresh) emitLoading();
     final future = await result.resultFuture;
     return future.fold<Output>(
       (l) {
