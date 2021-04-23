@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
+import 'package:async/async.dart' as async;
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../base_provider/base_provider_bloc.dart' as provider;
@@ -9,27 +11,91 @@ import 'base_working_bloc.dart';
 export 'working_state.dart';
 
 abstract class BaseConverterBloc<Input, Output>
-    extends BaseWorkingBloc<Input, Output> {
+    extends BaseWorkingBloc<Output> {
   StreamSubscription _subscription;
 
-  final _inputSubject = BehaviorSubject<Input>();
-  Stream<Input> get inputStream => LazyStream(() => _inputSubject.shareValue());
+  StreamSubscription _inputSubscription;
+
+  get initialState => LoadingState();
+
+  Stream<provider.ProviderState<Input>> get source => sourceBloc?.stateStream;
+
+  final provider.BaseProviderBloc<Input> sourceBloc;
+
+  final _eventsSubject = StreamController<provider.ProviderState<Input>>();
+  StreamSink<provider.ProviderState<Input>> get eventSink =>
+      _eventsSubject.sink;
+  Stream<provider.ProviderState<Input>> get eventStream =>
+      async.LazyStream(() => _eventsSubject.stream
+          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
+  final _statesSubject = BehaviorSubject<BlocState<Output>>();
+  Stream<BlocState<Output>> get stateStream =>
+      async.LazyStream(() => _statesSubject.shareValue());
+
+  final _inputSubject = StreamController<Input>();
+  Stream<Input> get inputStream => LazyStream(() => _inputSubject.stream);
   StreamSink<Input> get inputSink => _inputSubject.sink;
 
-  BaseConverterBloc(
-      {Output currentData, provider.BaseProviderBloc<Input> sourceBloc})
-      : super(currentData, sourceBloc: sourceBloc) {
-    _subscription = inputStream.listen(handleData, onError: (e, s) {
+  BaseConverterBloc({Output currentData, this.sourceBloc})
+      : super(currentData) {
+    listen((state) {
+      _statesSubject.add(state);
+    });
+    _inputSubscription = inputStream.listen(handleData, onError: (e, s) {
       print(e);
       print(s);
       emit(ErrorState(defaultError));
     });
+    _subscription = eventStream.listen(handleEvent, onError: (e, s) {
+      print(this);
+      print(e);
+      print(s);
+      emit(ErrorState(defaultError));
+    });
+    source?.pipe(eventSink);
+  }
+
+  Output Function(Input input) get converter => null;
+
+  void handleEvent(provider.ProviderState event) {
+    if (event is provider.ProviderLoadingState<Input>) {
+      emitLoading();
+    } else if (event is provider.ProviderLoadedState<Input>) {
+      handleData(event.data);
+    } else if (event is provider.ProviderErrorState<Input>) {
+      emit(ErrorState<Output>(event.message));
+    }
+  }
+
+  @mustCallSuper
+  void handleData(Input event) {
+    if (event == null) {
+      emit(ErrorState<Output>(notFoundMessage));
+    } else {
+      currentData = converter(event);
+      emitLoaded();
+    }
+  }
+
+  @mustCallSuper
+  Future<Output> getData([bool refresh = false]) async {
+    if (!refresh) emitLoading();
+    return null;
+  }
+
+  @mustCallSuper
+  Future<Output> refresh() async {
+    sourceBloc?.refresh();
+    return getData(true);
   }
 
   @override
   Future<void> close() {
+    _inputSubscription?.cancel();
     _subscription?.cancel();
-    _inputSubject.drain().then((value) => _inputSubject.close());
+    _inputSubject.close();
+    _statesSubject.drain().then((value) => _statesSubject.close());
+    _eventsSubject.close();
     return super.close();
   }
 }

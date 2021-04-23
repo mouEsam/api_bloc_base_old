@@ -4,19 +4,15 @@ import 'package:api_bloc_base/src/data/model/remote/base_api_response.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rxdart/rxdart.dart';
 
-import '../base_provider/base_provider_bloc.dart' as provider;
 import 'base_converter_bloc.dart';
 
 export 'working_state.dart';
 
-abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
+abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   String get notFoundMessage => 'foundNothing';
@@ -25,57 +21,12 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
 
   Output currentData;
 
-  StreamSubscription subscription;
-
-  Stream<provider.ProviderState<Input>> get source => sourceBloc?.stateStream;
-
-  final provider.BaseProviderBloc<Input> sourceBloc;
-
-  final _eventsSubject = StreamController<provider.ProviderState<Input>>();
-  StreamSink<provider.ProviderState<Input>> get eventSink =>
-      _eventsSubject.sink;
-  Stream<provider.ProviderState<Input>> get eventStream =>
-      async.LazyStream(() => _eventsSubject.stream
-          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
-  final _statesSubject = BehaviorSubject<BlocState<Output>>();
-  Stream<BlocState<Output>> get stateStream =>
-      async.LazyStream(() => _statesSubject.shareValue());
+  BlocState<Output> get initialState => LoadedState(currentData);
 
   Map<String, Tuple3<String, CancelToken, Stream<double>>> _operationStack = {};
 
-  BaseWorkingBloc(this.currentData, {this.sourceBloc}) : super(LoadingState()) {
-    listen((state) {
-      _statesSubject.add(state);
-    });
-    subscription = eventStream.listen(handleEvent, onError: (e, s) {
-      print(this);
-      print(e);
-      print(s);
-      emit(ErrorState(defaultError));
-    });
-    source?.pipe(eventSink);
-  }
-
-  Output Function(Input input) get converter => null;
-
-  void handleEvent(provider.ProviderState event) {
-    if (event is provider.ProviderLoadingState<Input>) {
-      emitLoading();
-    } else if (event is provider.ProviderLoadedState<Input>) {
-      handleData(event.data);
-    } else if (event is provider.ProviderErrorState<Input>) {
-      emit(ErrorState<Output>(event.message));
-    }
-  }
-
-  @mustCallSuper
-  void handleData(Input event) {
-    if (event == null) {
-      emit(ErrorState<Output>(notFoundMessage));
-    } else {
-      currentData = converter(event);
-      emitLoaded();
-    }
+  BaseWorkingBloc(this.currentData) : super(LoadingState()) {
+    emit(initialState);
   }
 
   void emitLoading() {
@@ -222,23 +173,8 @@ abstract class BaseWorkingBloc<Input, Output> extends Cubit<BlocState<Output>> {
     checkOperations();
   }
 
-  @mustCallSuper
-  Future<Output> getData([bool refresh = false]) async {
-    if (!refresh) emitLoading();
-    return null;
-  }
-
-  @mustCallSuper
-  Future<Output> refresh() async {
-    sourceBloc?.refresh();
-    return getData(true);
-  }
-
   @override
   Future<void> close() {
-    subscription?.cancel();
-    _statesSubject.drain().then((value) => _statesSubject.close());
-    _eventsSubject.close();
     return super.close();
   }
 }
