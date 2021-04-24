@@ -53,14 +53,15 @@ class FailedOperationState<T> extends LoadedState<T> implements Operation {
   final String operationTag;
   final String errorMessage;
   final BaseErrors errors;
+  final Function() retry;
 
   const FailedOperationState(
-      {T data, this.operationTag, this.errorMessage, this.errors})
+      {T data, this.operationTag, this.errorMessage, this.errors, this.retry})
       : super(data);
 
   @override
   List<Object> get props =>
-      [...super.props, this.operationTag, this.errorMessage];
+      [...super.props, this.operationTag, this.errorMessage, this.retry];
 }
 
 class SuccessfulOperationState<T> extends LoadedState<T> implements Operation {
