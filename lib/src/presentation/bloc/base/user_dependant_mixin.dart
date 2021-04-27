@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/independant_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
-mixin UserDependantMixin<Data> on BaseIndependentBloc<Data> {
+mixin UserDependantMixin<Data> on IndependentMixin<Data> {
   BaseUserBloc get userBloc => null;
   String authToken;
   get userId => userBloc.currentUser?.id;
