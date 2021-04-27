@@ -146,7 +146,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     final future = await result.resultFuture;
     return future.fold<Data>(
       (l) {
-        emit(ProviderErrorState(l.message));
+        emitErrorState(l.message, !refresh);
         return null;
       },
       (r) {
@@ -160,7 +160,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
       Either<ResponseEntity, Stream<Data>> result, bool refresh) async {
     result.fold(
       (l) {
-        emit(ProviderErrorState(l.message));
+        emitErrorState(l.message, !refresh);
       },
       (r) {
         _subscription?.cancel();
@@ -173,7 +173,7 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
         }, onError: (e, s) {
           print(e);
           print(s);
-          emit(ProviderErrorState(defaultError));
+          emitErrorState(defaultError, !refresh);
         });
       },
     );
@@ -209,8 +209,14 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
     });
   }
 
+  void clean() {
+    _dataSubject.value = null;
+    _dataFuture = Completer();
+  }
+
   @mustCallSuper
   Future<Data> getData({bool refresh = false}) async {
+    if (!refresh) clean();
     if (green && shouldBeGreen) {
       if (dataSource != null) {
         return handleOperation(dataSource, refresh);
@@ -232,6 +238,11 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
 
   void emitLoading() {
     emit(ProviderLoadingState<Data>());
+  }
+
+  void emitErrorState(String message, bool clean) {
+    if (clean) this.clean();
+    emit(ProviderErrorState<Data>(message));
   }
 
   Stream<ProviderState<Out>> transformStream<Out>(

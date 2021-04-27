@@ -43,8 +43,8 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   }
 
   void clean() {
+    super.clean();
     _currentPage = startPage;
-    currentData = null;
     _paginatedSubject.value = null;
   }
 

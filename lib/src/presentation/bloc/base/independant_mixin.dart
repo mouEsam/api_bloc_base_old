@@ -66,6 +66,11 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
 
   Output Function(Output input) get converter => (data) => data;
 
+  void clean() {
+    super.clean();
+    _finalDataSubject.value = null;
+  }
+
   Result<Either<ResponseEntity, Output>> get dataSource;
 
   Future<Output> getData([bool refresh = false]) {

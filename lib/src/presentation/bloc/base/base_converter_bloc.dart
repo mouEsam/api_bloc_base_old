@@ -55,6 +55,10 @@ abstract class BaseConverterBloc<Input, Output>
     source?.pipe(eventSink);
   }
 
+  void clean() {
+    currentData = null;
+  }
+
   Output Function(Input input) get converter => null;
 
   void handleEvent(provider.ProviderState event) {
