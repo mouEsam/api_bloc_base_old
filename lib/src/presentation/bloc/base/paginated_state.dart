@@ -6,20 +6,21 @@ abstract class PaginatedState<T> {
   PaginatedData<T> get paginatedData;
 }
 
-class PaginatedLoadingState<T> extends LoadedState<T>
+class PaginatedLoadedState<T> extends LoadedState<T>
     implements PaginatedState<T> {
   final PaginatedData<T> paginatedData;
 
-  PaginatedLoadingState(this.paginatedData, T data) : super(data);
+  const PaginatedLoadedState(this.paginatedData, T data) : super(data);
 }
 
-class PaginatedErrorState<T> extends LoadedState<T>
-    implements PaginatedState<T> {
-  final String message;
-  final PaginatedData<T> paginatedData;
+class LoadingStateWithPreviousData<T> extends LoadedState<T> {
+  const LoadingStateWithPreviousData(T data) : super(data);
+}
 
-  const PaginatedErrorState(this.paginatedData, T data, this.message)
-      : super(data);
+class ErrorStateWithPreviousData<T> extends LoadedState<T> {
+  final String message;
+
+  const ErrorStateWithPreviousData(T data, this.message) : super(data);
 
   @override
   List<Object> get props => [...super.props, this.message];
