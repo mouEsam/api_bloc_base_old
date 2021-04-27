@@ -1,4 +1,20 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:async/async.dart' as async;
+import 'package:equatable/equatable.dart';
+import 'package:rxdart/rxdart.dart';
+
+class PaginatedData<T> extends Equatable {
+  final T newData;
+  final T allData;
+  final int currentPage;
+
+  const PaginatedData(this.newData, this.allData, this.currentPage);
+
+  @override
+  get props => [this.newData, this.allData, this.currentPage];
+}
 
 mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   int get startPage => 1;
@@ -7,13 +23,23 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
 
   int get currentPage => _currentPage ?? startPage;
 
+  final _paginatedSubject = BehaviorSubject<PaginatedData<Output>>();
+  Stream<PaginatedData<Output>> get paginatedStream =>
+      async.LazyStream(() => _paginatedSubject.shareValue());
+
   @override
   void setData(Output newData) {
     final data = appendData(newData, currentData);
+    _paginatedSubject.add(PaginatedData(newData, data, currentPage));
     super.setData(data);
   }
 
   Output appendData(Output newData, Output oldData);
+
+  Future<Output> next() {
+    _currentPage++;
+    return super.getData();
+  }
 
   @override
   Future<Output> reset() {
@@ -31,6 +57,11 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
 
   @override
   void handleErrorState(errorState) {
+    if (currentPage != startPage) {
+      _currentPage--;
+    } else {
+      _currentPage = null;
+    }
     if (currentData == null) {
       super.handleErrorState(errorState);
     } else {
@@ -45,5 +76,11 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     } else {
       emit(PaginatedLoadingState<Output>(currentData));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _paginatedSubject.drain().then((value) => _paginatedSubject.close());
+    return super.close();
   }
 }
