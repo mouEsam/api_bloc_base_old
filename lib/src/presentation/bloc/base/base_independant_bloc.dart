@@ -53,7 +53,7 @@ abstract class BaseIndependentBloc<Output>
 
   BaseIndependentBloc({this.sources = const [], Output currentData})
       : super(currentData: currentData) {
-    finalDataStream.listen(super.handleData);
+    // finalDataStream.listen(super.handleData);
   }
 
   Output combineData(Output data) => data;
