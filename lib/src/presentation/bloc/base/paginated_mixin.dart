@@ -24,6 +24,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   int get currentPage => _currentPage ?? startPage;
 
   final _paginatedSubject = BehaviorSubject<PaginatedData<Output>>();
+  PaginatedData<Output> get latestPage => _paginatedSubject.value;
   Stream<PaginatedData<Output>> get paginatedStream =>
       async.LazyStream(() => _paginatedSubject.shareValue());
 
@@ -65,7 +66,8 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     if (currentData == null) {
       super.handleErrorState(errorState);
     } else {
-      emit(PaginatedErrorState<Output>(currentData, errorState.message));
+      emit(PaginatedErrorState<Output>(
+          latestPage, currentData, errorState.message));
     }
   }
 
@@ -74,7 +76,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     if (currentData == null) {
       super.handleLoadingState(loadingState);
     } else {
-      emit(PaginatedLoadingState<Output>(currentData));
+      emit(PaginatedLoadingState<Output>(latestPage, currentData));
     }
   }
 
