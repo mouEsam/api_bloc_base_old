@@ -42,17 +42,21 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     return super.getData();
   }
 
-  @override
-  Future<Output> reset() {
+  void clean() {
     _currentPage = startPage;
     currentData = null;
+    _paginatedSubject.value = null;
+  }
+
+  @override
+  Future<Output> reset() {
+    clean();
     return super.reset();
   }
 
   @override
   Future<Output> refresh() {
-    _currentPage = startPage;
-    currentData = null;
+    clean();
     return super.refresh();
   }
 
