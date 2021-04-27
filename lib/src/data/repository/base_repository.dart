@@ -98,6 +98,7 @@ abstract class BaseRepository {
     final cancelToken = result.cancelToken;
     final future = result.resultFuture.then<ResponseEntity>((value) async {
       final data = value.data;
+      interceptData?.call(data);
       return converter.response(data);
     }).catchError((e, s) async {
       print(e);
