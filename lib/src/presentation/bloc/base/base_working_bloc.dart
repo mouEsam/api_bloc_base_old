@@ -116,8 +116,8 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       }
     } else {
       removeOperation(operationTag: operationTag);
-      return null;
     }
+    return null;
   }
 
   void emitLoaded() {
