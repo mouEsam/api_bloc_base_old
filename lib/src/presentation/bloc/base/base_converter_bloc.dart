@@ -59,12 +59,22 @@ abstract class BaseConverterBloc<Input, Output>
 
   void handleEvent(provider.ProviderState event) {
     if (event is provider.ProviderLoadingState<Input>) {
-      emitLoading();
+      handleLoadingState(event);
     } else if (event is provider.ProviderLoadedState<Input>) {
       handleData(event.data);
     } else if (event is provider.ProviderErrorState<Input>) {
-      emit(ErrorState<Output>(event.message));
+      handleErrorState(event);
     }
+  }
+
+  @mustCallSuper
+  void handleErrorState(provider.ProviderErrorState<Input> errorState) {
+    emit(ErrorState<Output>(errorState.message));
+  }
+
+  @mustCallSuper
+  void handleLoadingState(provider.ProviderLoadingState<Input> loadingState) {
+    emitLoading();
   }
 
   @mustCallSuper
@@ -72,15 +82,25 @@ abstract class BaseConverterBloc<Input, Output>
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      currentData = converter(event);
-      emitLoaded();
+      setData(converter(event));
     }
+  }
+
+  @mustCallSuper
+  void setData(Output newData) {
+    currentData = newData;
+    emitLoaded();
   }
 
   @mustCallSuper
   Future<Output> getData([bool refresh = false]) async {
     if (!refresh) emitLoading();
     return null;
+  }
+
+  @mustCallSuper
+  Future<Output> reset() async {
+    return getData();
   }
 
   @mustCallSuper

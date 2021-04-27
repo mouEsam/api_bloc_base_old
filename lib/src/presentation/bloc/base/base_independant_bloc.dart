@@ -58,10 +58,11 @@ abstract class BaseIndependentBloc<Output>
 
   Output combineData(Output data) => data;
 
-  // ignore: must_call_super
-  void handleData(Output event) {
-    final data = combineData(event);
+  @override
+  void setData(Output newData) {
+    final data = combineData(newData);
     _finalDataSubject.add(data);
+    super.setData(data);
   }
 
   final _ownDataSubject = StreamController<Output>();

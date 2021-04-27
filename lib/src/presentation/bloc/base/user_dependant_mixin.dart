@@ -16,7 +16,7 @@ mixin UserDependantMixin<Data> on BaseIndependentBloc<Data> {
         if (newToken != null) {
           if (newToken != authToken) {
             authToken = newToken;
-            getData();
+            reset();
           }
         } else {
           authToken = null;
