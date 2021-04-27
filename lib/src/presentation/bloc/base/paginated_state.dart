@@ -13,14 +13,14 @@ class PaginatedLoadedState<T> extends LoadedState<T>
   const PaginatedLoadedState(this.paginatedData, T data) : super(data);
 }
 
-class LoadingStateWithPreviousData<T> extends LoadedState<T> {
-  const LoadingStateWithPreviousData(T data) : super(data);
+class LoadingNextPageState<T> extends LoadedState<T> {
+  const LoadingNextPageState(T data) : super(data);
 }
 
-class ErrorStateWithPreviousData<T> extends LoadedState<T> {
+class ErrorGettingNextPageState<T> extends LoadedState<T> {
   final String message;
 
-  const ErrorStateWithPreviousData(T data, this.message) : super(data);
+  const ErrorGettingNextPageState(T data, this.message) : super(data);
 
   @override
   List<Object> get props => [...super.props, this.message];

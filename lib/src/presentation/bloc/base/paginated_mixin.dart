@@ -66,7 +66,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     if (currentData == null) {
       super.handleErrorState(errorState);
     } else {
-      emit(ErrorStateWithPreviousData<Output>(currentData, errorState.message));
+      emit(ErrorGettingNextPageState<Output>(currentData, errorState.message));
     }
   }
 
@@ -75,7 +75,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     if (currentData == null) {
       super.handleLoadingState(loadingState);
     } else {
-      emit(LoadingStateWithPreviousData<Output>(currentData));
+      emit(LoadingNextPageState<Output>(currentData));
     }
   }
 
