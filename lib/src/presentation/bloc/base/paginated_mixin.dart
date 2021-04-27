@@ -1,6 +1,6 @@
 import 'package:api_bloc_base/api_bloc_base.dart';
 
-mixin PaginatedMixin<Data> on BaseConverterBloc<dynamic, Data> {
+mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   int get startPage => 1;
 
   int _currentPage;
@@ -8,22 +8,22 @@ mixin PaginatedMixin<Data> on BaseConverterBloc<dynamic, Data> {
   int get currentPage => _currentPage ?? startPage;
 
   @override
-  void setData(Data newData) {
+  void setData(Output newData) {
     final data = appendData(newData, currentData);
     super.setData(data);
   }
 
-  Data appendData(Data newData, Data oldData);
+  Output appendData(Output newData, Output oldData);
 
   @override
-  Future<Data> reset() {
+  Future<Output> reset() {
     _currentPage = startPage;
     currentData = null;
     return super.reset();
   }
 
   @override
-  Future<Data> refresh() {
+  Future<Output> refresh() {
     _currentPage = startPage;
     currentData = null;
     return super.refresh();
@@ -34,7 +34,7 @@ mixin PaginatedMixin<Data> on BaseConverterBloc<dynamic, Data> {
     if (currentData == null) {
       super.handleErrorState(errorState);
     } else {
-      emit(PaginatedErrorState<Data>(currentData, errorState.message));
+      emit(PaginatedErrorState<Output>(currentData, errorState.message));
     }
   }
 
@@ -43,7 +43,7 @@ mixin PaginatedMixin<Data> on BaseConverterBloc<dynamic, Data> {
     if (currentData == null) {
       super.handleLoadingState(loadingState);
     } else {
-      emit(PaginatedLoadingState<Data>(currentData));
+      emit(PaginatedLoadingState<Output>(currentData));
     }
   }
 }
