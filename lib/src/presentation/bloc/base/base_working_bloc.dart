@@ -91,31 +91,32 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     );
   }
 
-  Future<void> handleOperation(Result<ResponseEntity> result,
+  Future<Operation> handleOperation(Result<ResponseEntity> result,
       {String loadingMessage,
       String successMessage,
       String operationTag = _DEFAULT_OPERATION}) async {
     startOperation(loadingMessage, result.cancelToken, result.progress,
         operationTag: operationTag);
     final future = await result.resultFuture;
-    handleResponse(future, operationTag: operationTag);
+    return handleResponse(future, operationTag: operationTag);
   }
 
-  void handleResponse(ResponseEntity l,
+  Operation handleResponse(ResponseEntity l,
       {String operationTag = _DEFAULT_OPERATION,
       bool failure = true,
       bool success = true}) {
     if (l is Failure) {
       if (failure) {
-        failedOperation(l.message,
+        return failedOperation(l.message,
             errors: l.errors, operationTag: operationTag);
       }
     } else if (l is Success) {
       if (success) {
-        successfulOperation(l.message, operationTag: operationTag);
+        return successfulOperation(l.message, operationTag: operationTag);
       }
     } else {
       removeOperation(operationTag: operationTag);
+      return null;
     }
   }
 
@@ -152,25 +153,27 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     checkOperations();
   }
 
-  void successfulOperation(String message,
+  Operation successfulOperation(String message,
       {String operationTag = _DEFAULT_OPERATION}) {
-    emit(SuccessfulOperationState(
-        data: currentData,
-        successMessage: message,
-        operationTag: operationTag));
+    final op = SuccessfulOperationState(
+        data: currentData, successMessage: message, operationTag: operationTag);
+    emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
+    return op;
   }
 
-  void failedOperation(String message,
+  FailedOperationState failedOperation(String message,
       {BaseErrors errors, String operationTag = _DEFAULT_OPERATION}) {
-    emit(FailedOperationState(
+    final op = FailedOperationState(
         data: currentData,
         errorMessage: message,
         operationTag: operationTag,
-        errors: errors));
+        errors: errors);
+    emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
+    return op;
   }
 
   @override
