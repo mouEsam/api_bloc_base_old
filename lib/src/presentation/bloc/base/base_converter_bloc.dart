@@ -100,6 +100,7 @@ abstract class BaseConverterBloc<Input, Output>
 
   @mustCallSuper
   Future<Output> reset() async {
+    currentData = null;
     return getData();
   }
 
