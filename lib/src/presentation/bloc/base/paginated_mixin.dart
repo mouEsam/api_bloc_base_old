@@ -18,12 +18,32 @@ mixin PaginatedMixin<Data> on BaseConverterBloc<dynamic, Data> {
   @override
   Future<Data> reset() {
     _currentPage = startPage;
+    currentData = null;
     return super.reset();
   }
 
   @override
   Future<Data> refresh() {
     _currentPage = startPage;
+    currentData = null;
     return super.refresh();
+  }
+
+  @override
+  void handleErrorState(errorState) {
+    if (currentData == null) {
+      super.handleErrorState(errorState);
+    } else {
+      emit(PaginatedErrorState<Data>(currentData, errorState.message));
+    }
+  }
+
+  @override
+  void handleLoadingState(loadingState) {
+    if (currentData == null) {
+      super.handleLoadingState(loadingState);
+    } else {
+      emit(PaginatedLoadingState<Data>(currentData));
+    }
   }
 }
