@@ -31,7 +31,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   @override
   void setData(Output newData) {
     final data = appendData(newData, currentData);
-    _paginatedSubject.add(PaginatedData(newData, data, currentPage));
+    _paginatedSubject.value = PaginatedData(newData, data, currentPage);
     super.setData(data);
   }
 
@@ -70,6 +70,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     if (currentData == null) {
       super.handleErrorState(errorState);
     } else {
+      _paginatedSubject.value = PaginatedData(null, currentData, currentPage);
       emit(ErrorGettingNextPageState<Output>(currentData, errorState.message));
     }
   }
