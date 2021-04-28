@@ -55,7 +55,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     } else {
       try {
         dynamic d = newData;
-        return d.newPageLength > 0;
+        return d.count > 0;
       } catch (e) {
         return false;
       }
