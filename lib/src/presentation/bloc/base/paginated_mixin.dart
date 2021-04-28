@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:async/async.dart' as async;
@@ -21,7 +22,13 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   int _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
+  int get lastPage =>
+      paginatedData?.data?.keys
+          ?.fold(0, (previousValue, element) => max(previousValue, element)) ??
+      2;
 
+  bool get canGoBack => currentPage > startPage;
+  bool get canGoForward => currentPage < lastPage || isThereMore;
   bool get isThereMore => paginatedData?.isThereMore ?? true;
 
   PaginatedData<Output> paginatedData;
@@ -55,9 +62,29 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     }
   }
 
-  Future<Output> next() {
-    _currentPage++;
-    return super.getData();
+  Future<Output> next() async {
+    if (canGoForward) {
+      _currentPage++;
+      final nextData = paginatedData?.data[_currentPage];
+      if (nextData != null) {
+        setData(nextData);
+        emitLoaded();
+        return nextData;
+      }
+      return super.getData();
+    }
+    return currentData;
+  }
+
+  Future<Output> back() async {
+    if (canGoBack) {
+      _currentPage--;
+      final previousData = paginatedData.data[_currentPage];
+      setData(previousData);
+      emitLoaded();
+      return previousData;
+    }
+    return currentData;
   }
 
   void clean() {
