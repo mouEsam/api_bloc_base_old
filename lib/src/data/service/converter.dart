@@ -2,7 +2,9 @@ import 'package:api_bloc_base/src/data/model/remote/base_api_response.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 
 abstract class BaseResponseConverter<T extends BaseApiResponse, X> {
-  const BaseResponseConverter();
+  final String Function(String) handlePath;
+
+  const BaseResponseConverter([this.handlePath]);
 
   String get defaultErrorMessage => 'Error';
 
