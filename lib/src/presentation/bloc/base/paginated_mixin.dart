@@ -12,6 +12,23 @@ class PaginatedData<T> extends Equatable {
 
   const PaginatedData(this.newData, this.allData, this.currentPage);
 
+  bool get isThereMore {
+    bool isThereMore = newData != null;
+    if (newData is Iterable) {
+      Iterable d = newData as Iterable;
+      isThereMore = d.isNotEmpty;
+    } else if (newData is Map) {
+      Map m = newData as Map;
+      isThereMore = m.isNotEmpty;
+    } else {
+      try {
+        dynamic d = newData;
+        isThereMore = d.newLength > 0;
+      } catch (e) {}
+    }
+    return isThereMore;
+  }
+
   @override
   get props => [this.newData, this.allData, this.currentPage];
 }
@@ -22,6 +39,8 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
   int _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
+
+  bool get isThereMore => latestPage?.isThereMore ?? true;
 
   final _paginatedSubject = BehaviorSubject<PaginatedData<Output>>();
   PaginatedData<Output> get latestPage => _paginatedSubject.value;
