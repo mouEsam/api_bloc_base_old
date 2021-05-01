@@ -217,6 +217,8 @@ abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
   @mustCallSuper
   Future<Data> getData({bool refresh = false}) async {
     if (!refresh) clean();
+    final dataSource = this.dataSource;
+    final dataSourceStream = this.dataSourceStream;
     if (green && shouldBeGreen) {
       if (dataSource != null) {
         return handleOperation(dataSource, refresh);
