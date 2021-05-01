@@ -14,6 +14,7 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
 
   Stream<provider.ProviderState<Output>> get source {
     Stream<provider.ProviderState<Output>> finalStream;
+    final sources = this.sources;
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources)
           .asBroadcastStream(onCancel: (sub) => sub.cancel());
