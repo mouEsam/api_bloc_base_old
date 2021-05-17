@@ -111,7 +111,7 @@ class BaseRestClient {
       throw FlutterError(
           'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
     }
-    final progressController = StreamController<double>();
+    final progressController = StreamController<double>.broadcast();
     if (params != null) {
       print(Map.fromEntries(
           params.toMap().entries.where((element) => element.value != null)));
@@ -269,7 +269,7 @@ class BaseRestClient {
       throw FlutterError(
           'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
     }
-    final progressController = StreamController<double>();
+    final progressController = StreamController<double>.broadcast();
     if (params != null) {
       print(Map.fromEntries(
           params.toMap().entries.where((element) => element.value != null)));

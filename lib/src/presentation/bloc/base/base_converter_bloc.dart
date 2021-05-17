@@ -22,7 +22,8 @@ abstract class BaseConverterBloc<Input, Output>
 
   final provider.BaseProviderBloc<Input> sourceBloc;
 
-  final _eventsSubject = StreamController<provider.ProviderState<Input>>();
+  final _eventsSubject =
+      StreamController<provider.ProviderState<Input>>.broadcast();
   StreamSink<provider.ProviderState<Input>> get eventSink =>
       _eventsSubject.sink;
   Stream<provider.ProviderState<Input>> get eventStream =>
@@ -32,7 +33,7 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<BlocState<Output>> get stateStream =>
       async.LazyStream(() => _statesSubject.shareValue());
 
-  final _inputSubject = StreamController<Input>();
+  final _inputSubject = StreamController<Input>.broadcast();
   Stream<Input> get inputStream => LazyStream(() => _inputSubject.stream);
   StreamSink<Input> get inputSink => _inputSubject.sink;
 

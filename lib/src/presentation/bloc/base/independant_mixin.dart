@@ -59,7 +59,7 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
     super.setData(data);
   }
 
-  final _ownDataSubject = StreamController<Output>();
+  final _ownDataSubject = StreamController<Output>.broadcast();
   Stream<Output> get originalDataStream => _ownDataSubject.stream;
 
   final _finalDataSubject = BehaviorSubject<Output>();
