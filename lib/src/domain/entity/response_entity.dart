@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/src/data/model/remote/base_errors.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 
 class ResponseEntity extends Equatable {
@@ -27,8 +28,12 @@ class Failure extends ResponseEntity {
 }
 
 class InternetFailure extends Failure {
-  const InternetFailure(String message, [BaseErrors errors])
+  final DioError dioError;
+  const InternetFailure(String message, this.dioError, [BaseErrors errors])
       : super(message, errors);
+
+  @override
+  List<Object> get props => [...super.props, this.dioError];
 }
 
 class Cancellation extends ResponseEntity {

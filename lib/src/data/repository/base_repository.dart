@@ -79,9 +79,15 @@ abstract class BaseRepository {
           return z.Right<ResponseEntity, S>(result);
         }
       }
-      return z.Left<ResponseEntity, S>(
-        InternetFailure(internetError),
-      );
+      if (e is DioError) {
+        return z.Left<ResponseEntity, S>(
+          InternetFailure(internetError, e),
+        );
+      } else {
+        return z.Left<ResponseEntity, S>(
+          Failure(defaultError),
+        );
+      }
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
@@ -105,8 +111,11 @@ abstract class BaseRepository {
       print(s);
       if (e is DioError && e.type == DioErrorType.CANCEL) {
         return Cancellation();
+      } else if (e is DioError) {
+        return InternetFailure(internetError, e);
+      } else {
+        return Failure(defaultError);
       }
-      return InternetFailure(internetError);
     });
     return Result<ResponseEntity>(
         cancelToken: cancelToken,
@@ -131,10 +140,15 @@ abstract class BaseRepository {
         return z.Left<ResponseEntity, S>(
           Cancellation(),
         );
+      } else if (e is DioError) {
+        return z.Left<ResponseEntity, S>(
+          InternetFailure(internetError, e),
+        );
+      } else {
+        return z.Left<ResponseEntity, S>(
+          Failure(defaultError),
+        );
       }
-      return z.Left<ResponseEntity, S>(
-        InternetFailure(internetError),
-      );
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
