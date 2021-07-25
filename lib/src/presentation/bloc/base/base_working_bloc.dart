@@ -72,13 +72,18 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       Result<Either<ResponseEntity, T>> result,
       {String loadingMessage,
       String successMessage,
-      String operationTag = _DEFAULT_OPERATION}) async {
+      String operationTag = _DEFAULT_OPERATION, bool Function(ResponseEntity response, String tag) handleResponse}) async {
     startOperation(loadingMessage, result.cancelToken, result.progress,
         operationTag: operationTag);
     final future = await result.resultFuture;
     return future.fold<T>(
       (l) {
-        handleResponse(l, operationTag: operationTag);
+        bool handled = handleResponse?.call(l, operationTag);
+        if (handled == true) {
+          removeOperation(operationTag: operationTag);
+        } else {
+          this.handleResponse(l, operationTag: operationTag);
+        }
         return null;
       },
       (r) {

@@ -5,9 +5,9 @@ import 'dart:math' as math;
 
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
+import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:dio_flutter_transformer/dio_flutter_transformer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
@@ -47,11 +47,11 @@ class BaseRestClient {
   static CacheOptions createCacheOptions(
       {CacheOptions cacheOptions, CachePolicy cachePolicy}) {
     return CacheOptions(
-      store: cacheOptions?.store ?? DbCacheStore(), // Required.
+      store: cacheOptions?.store ?? MemCacheStore(), // Required.
       policy: cachePolicy ??
           cacheOptions?.policy ??
           CachePolicy
-              .requestFirst, // Default. Requests first and caches response.
+              .request, // Default. Requests first and caches response.
       hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ??
           [
             401,
@@ -192,28 +192,28 @@ class BaseRestClient {
     }
     Future<Response> result;
     if (mockedResult == null) {
+      dio.options.baseUrl = newBaseUrl;
       result = dio.request(path,
           queryParameters: queryParameters,
           cancelToken: cancelToken,
           onReceiveProgress: _progressListener,
           onSendProgress: _progressListener,
-          options: RequestOptions(
+          options: Options(
               method: method.method,
               headers: headers,
               extra: extra,
-              responseType: responseType,
-              baseUrl: newBaseUrl),
+              responseType: responseType),
           data: body);
     } else {
       result = Future.value(Response(
         headers: Headers(),
         //isRedirect: false,
         extra: extra,
-        request: RequestOptions(
+        requestOptions: RequestOptions(
             method: method.method,
             headers: headers,
             extra: extra,
-            baseUrl: newBaseUrl),
+            baseUrl: newBaseUrl, path: path),
         statusCode: 200,
         statusMessage: 'success',
       ));
@@ -237,7 +237,7 @@ class BaseRestClient {
           headers: result.headers,
           isRedirect: result.isRedirect,
           redirects: result.redirects,
-          request: result.request,
+          requestOptions: result.requestOptions,
           statusCode: result.statusCode,
           statusMessage: result.statusMessage);
     });
@@ -330,15 +330,15 @@ class BaseRestClient {
       progressController.add(math.max(progress, 1.0));
       return progress;
     };
+    dio.options.baseUrl = baseUrl;
     Future<Response<ResponseBody>> result = dio.download(path, null,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onReceiveProgress: _progressListener,
-        options: RequestOptions(
+        options: Options(
             method: method.method,
             headers: headers,
-            extra: extra,
-            baseUrl: baseUrl),
+            extra: extra),
         data: body);
     final _stream =
         result.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());

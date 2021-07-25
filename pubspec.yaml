@@ -11,25 +11,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  rxdart: any
-  equatable: ^1.2.3
-  json_annotation: ^3.0.0
-  dartz: ^0.9.1
-  flutter_bloc: ^6.1.1
-  dio: ^3.0.10
-  dio_cache_interceptor: ^1.0.0
-  dio_flutter_transformer: ^3.0.2
-  sembast: ^2.4.8
-  path_provider: ^1.6.24
-  flutter_secure_storage: ^3.3.5
-  async: any
-  worker_manager: ^3.1.6
+  rxdart: ^0.27.1
+  equatable: ^2.0.3
+  json_annotation: ^4.0.1
+  dartz: ^0.10.0-nullsafety.2
+  flutter_bloc: ^7.0.1
+  dio: ^4.0.0
+  dio_cache_interceptor: ^3.0.1
+  sembast: ^3.1.0+2
+  path_provider: ^2.0.2
+  flutter_secure_storage: ^4.2.0
+  async: ^2.6.1
+  worker_manager: ^4.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  json_serializable: ^3.2.0
-  build_runner: any
+  json_serializable: ^4.1.4
+  build_runner: ^2.0.6
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
