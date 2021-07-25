@@ -10,30 +10,30 @@ import 'base_converter_bloc.dart';
 export 'working_state.dart';
 
 mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
-  List<Stream<provider.ProviderState>> get sources;
+  List<Stream<provider.ProviderState>>? get sources;
 
   Stream<provider.ProviderState<Output>> get source {
     Stream<provider.ProviderState<Output>> finalStream;
-    final sources = this.sources;
+    final sources = this.sources!;
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources)
           .asBroadcastStream(onCancel: (sub) => sub.cancel());
       finalStream = CombineLatestStream.combine2<List, Output,
               provider.ProviderState<Output>>(stream, originalDataStream,
           (list, data) {
-        provider.ProviderErrorState error = list.firstWhere(
+        provider.ProviderErrorState? error = list.firstWhere(
             (element) => element is provider.ProviderErrorState,
             orElse: () => null);
         if (error != null) {
           return provider.ProviderErrorState<Output>(error.message);
         }
-        provider.ProviderLoadingState loading = list.firstWhere(
+        provider.ProviderLoadingState? loading = list.firstWhere(
             (element) => element is provider.ProviderLoadingState,
             orElse: () => null);
         if (loading != null) {
           return provider.ProviderLoadingState<Output>();
         }
-        provider.InvalidatedState invalidated = list.firstWhere(
+        provider.InvalidatedState? invalidated = list.firstWhere(
             (element) => element is provider.InvalidatedState,
             orElse: () => null);
         if (invalidated != null) {
@@ -62,29 +62,29 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
   final _ownDataSubject = StreamController<Output>.broadcast();
   Stream<Output> get originalDataStream => _ownDataSubject.stream;
 
-  final _finalDataSubject = BehaviorSubject<Output>();
+  final BehaviorSubject<Output> _finalDataSubject = BehaviorSubject<Output>();
   Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
 
   Output Function(Output input) get converter => (data) => data;
 
   void clean() {
     super.clean();
-    _finalDataSubject.value = null;
+    //_finalDataSubject.value = null;
   }
 
   Result<Either<ResponseEntity, Output>> get dataSource;
 
-  Future<Output> getData([bool refresh = false]) {
+  Future<Output?> getData([bool refresh = false]) {
     super.getData(refresh);
     final data = dataSource;
     return handleDataRequest(data, refresh);
   }
 
-  Future<Output> handleDataRequest(
+  Future<Output?> handleDataRequest(
       Result<Either<ResponseEntity, Output>> result, bool refresh) async {
     if (!refresh) emitLoading();
-    final future = await result.resultFuture;
-    return future.fold<Output>(
+    final future = await result.resultFuture!;
+    return future.fold<Output?>(
       (l) {
         handleEvent(ProviderErrorState<Output>(l.message));
         return null;

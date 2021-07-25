@@ -15,10 +15,10 @@ class BaseApiResponse {
     this.errors,
   );
 
-  final String success;
-  final String message;
-  final String error;
-  final BaseErrors errors;
+  final String? success;
+  final String? message;
+  final String? error;
+  final BaseErrors? errors;
 
   factory BaseApiResponse.fromJson(Map<String, dynamic> json) =>
       _$BaseApiResponseFromJson(json);

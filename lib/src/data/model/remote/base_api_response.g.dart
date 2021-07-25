@@ -8,12 +8,12 @@ part of 'base_api_response.dart';
 
 BaseApiResponse _$BaseApiResponseFromJson(Map<String, dynamic> json) {
   return BaseApiResponse(
-    json['success'] as String,
-    json['message'] as String,
-    json['error'] as String,
+    json['success'] as String?,
+    json['message'] as String?,
+    json['error'] as String?,
     json['errors'] == null
         ? null
-        : BaseErrors.fromJson(json['errors'] as Map<String, dynamic>),
+        : BaseErrors.fromJson(json['errors'] as Map<String, dynamic>?),
   );
 }
 

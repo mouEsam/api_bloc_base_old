@@ -6,7 +6,7 @@ part of 'base_errors.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-BaseErrors _$BaseErrorsFromJson(Map<String, dynamic> json) {
+BaseErrors _$BaseErrorsFromJson(Map<String, dynamic>? json) {
   return BaseErrors();
 }
 

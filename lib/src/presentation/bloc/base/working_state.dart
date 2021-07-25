@@ -8,18 +8,18 @@ class BlocState<T> extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class LoadingState<T> extends BlocState<T> {}
 
 class ErrorState<T> extends BlocState<T> {
-  final String message;
+  final String? message;
 
   const ErrorState(this.message);
 
   @override
-  List<Object> get props => [this.message];
+  List<Object?> get props => [this.message];
 }
 
 class LoadedState<T> extends BlocState<T> {
@@ -28,51 +28,51 @@ class LoadedState<T> extends BlocState<T> {
   const LoadedState(this.data);
 
   @override
-  List<Object> get props => [this.data];
+  List<Object?> get props => [this.data];
 }
 
 abstract class Operation {
-  String get operationTag;
+  String? get operationTag;
 }
 
 class OnGoingOperationState<T> extends LoadedState<T> implements Operation {
-  final String operationTag;
-  final String loadingMessage;
-  final Stream<double> progress;
+  final String? operationTag;
+  final String? loadingMessage;
+  final Stream<double>? progress;
 
-  const OnGoingOperationState(
-      {T data, this.loadingMessage, this.operationTag, this.progress})
+  const OnGoingOperationState(T data,
+      {this.loadingMessage, this.operationTag, this.progress})
       : super(data);
 
   @override
-  List<Object> get props =>
+  List<Object?> get props =>
       [...super.props, this.operationTag, this.loadingMessage, this.progress];
 }
 
 class FailedOperationState<T> extends LoadedState<T> implements Operation {
-  final String operationTag;
-  final String errorMessage;
-  final BaseErrors errors;
-  final Function() retry;
+  final String? operationTag;
+  final String? errorMessage;
+  final BaseErrors? errors;
+  final Function()? retry;
 
-  const FailedOperationState(
-      {T data, this.operationTag, this.errorMessage, this.errors, this.retry})
+  const FailedOperationState(T data,
+      {this.operationTag, this.errorMessage, this.errors, this.retry})
       : super(data);
 
   @override
-  List<Object> get props =>
+  List<Object?> get props =>
       [...super.props, this.operationTag, this.errorMessage, this.retry];
 }
 
 class SuccessfulOperationState<T> extends LoadedState<T> implements Operation {
-  final String operationTag;
-  final String successMessage;
+  final String? operationTag;
+  final String? successMessage;
 
-  const SuccessfulOperationState(
-      {T data, this.operationTag, this.successMessage})
+  const SuccessfulOperationState(T data,
+      {this.operationTag, this.successMessage})
       : super(data);
 
   @override
-  List<Object> get props =>
+  List<Object?> get props =>
       [...super.props, this.operationTag, this.successMessage];
 }

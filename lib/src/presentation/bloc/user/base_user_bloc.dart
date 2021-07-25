@@ -15,16 +15,16 @@ import 'base_user_state.dart';
 
 abstract class BaseUserBloc<T extends BaseProfile>
     extends Cubit<BaseUserState> {
-  Timer _timer;
+  Timer? _timer;
   bool firstLoginEmit = true;
 
   final UserDefaults userDefaults;
 
-  final _userAccount = BehaviorSubject<T>();
+  final BehaviorSubject<T?> _userAccount = BehaviorSubject<T?>();
 
-  StreamSubscription<T> _detailsSubscription;
-  Stream<T> get userStream => _userAccount.shareValue();
-  StreamSink<T> get userSink => _userAccount.sink;
+  StreamSubscription<T>? _detailsSubscription;
+  Stream<T?> get userStream => _userAccount.shareValue();
+  StreamSink<T?> get userSink => _userAccount.sink;
 
   Stream<provider.ProviderState<T>> get profileStream =>
       userStream.map<provider.ProviderState<T>>((event) {
@@ -35,17 +35,17 @@ abstract class BaseUserBloc<T extends BaseProfile>
         }
       });
 
-  T get currentUser => _userAccount.value;
+  T? get currentUser => _userAccount.value;
 
   BaseUserBloc(this.userDefaults) : super(UserLoadingState()) {
     autoSignIn();
-    listen((state) {
+    stream.listen((state) {
       _timer?.cancel();
-      T user;
+      T? user;
       if (state is SignedOutState) {
         _detailsSubscription?.cancel();
       } else if (state is BaseSignedInState) {
-        user = state.userAccount;
+        user = state.userAccount as T?;
         if (shouldProfileRefresh(state)) {
           _timer = Timer.periodic(Duration(seconds: 30), (_) => autoSignIn());
         }
@@ -64,7 +64,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Future<ResponseEntity> get signOutApi;
 
-  Future<ResponseEntity> signOut() async {
+  Future<ResponseEntity?> signOut() async {
     final result = await signOutApi;
     final actualLogOut = () {
       userDefaults.setSignedAccount(null);
@@ -83,7 +83,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
   Result<ResponseEntity> offlineSignOut() {
     final one = userDefaults.setSignedAccount(null);
     final two = userDefaults.setUserToken(null);
-    final result = Future.wait([one, two]).then((value) {
+    final result = Future.wait([one, two]).then<ResponseEntity>((value) {
       handleUser(null);
       return Success();
     }).catchError((e, s) {
@@ -94,14 +94,14 @@ abstract class BaseUserBloc<T extends BaseProfile>
     return Result(resultFuture: result);
   }
 
-  Future<void> handleUser(T user) async {
+  Future<void> handleUser(T? user) async {
     print(user);
     if (user == null) {
       userDefaults.setSignedAccount(null);
       userDefaults.setUserToken(null);
       emit(SignedOutState());
     } else {
-      if (user.active) {
+      if (user.active!) {
         userDefaults.setSignedAccount(user);
         userDefaults.setUserToken(user.accessToken);
       }

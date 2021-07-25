@@ -8,8 +8,8 @@ abstract class BaseProfile extends Entity {
     this.active,
   });
 
-  final String accessToken;
-  final bool active;
+  final String? accessToken;
+  final bool? active;
 
   @JsonKey(ignore: true)
   dynamic get id;
@@ -18,7 +18,7 @@ abstract class BaseProfile extends Entity {
   bool get stringify => true;
 
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
         this.accessToken,
       ];
 

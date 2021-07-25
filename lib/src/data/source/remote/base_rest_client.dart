@@ -42,10 +42,10 @@ class BaseRestClient {
   final String baseUrl;
   final Dio dio;
 
-  CacheOptions _cacheOptions;
+  CacheOptions? _cacheOptions;
 
   static CacheOptions createCacheOptions(
-      {CacheOptions cacheOptions, CachePolicy cachePolicy}) {
+      {CacheOptions? cacheOptions, CachePolicy? cachePolicy}) {
     return CacheOptions(
       store: cacheOptions?.store ?? MemCacheStore(), // Required.
       policy: cachePolicy ??
@@ -69,14 +69,14 @@ class BaseRestClient {
 
   BaseRestClient(this.baseUrl,
       {Iterable<Interceptor> interceptors = const [],
-      CacheOptions cacheOptions,
-      CachePolicy cachePolicy,
-      BaseOptions options})
+      CacheOptions? cacheOptions,
+      CachePolicy? cachePolicy,
+      BaseOptions? options})
       : dio = Dio() {
     dio.interceptors.addAll(interceptors);
     _cacheOptions = createCacheOptions(
         cacheOptions: cacheOptions, cachePolicy: cachePolicy);
-    dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions));
+    dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions!));
     if (options == null) {
       dio.options.connectTimeout = 15000;
       dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
@@ -92,20 +92,20 @@ class BaseRestClient {
   RequestResult<T> request<T>(
     RequestMethod method,
     String path, {
-    T mockedResult,
-    CancelToken cancelToken,
-    String authorizationToken,
-    Params params,
-    String subDomain,
+    T? mockedResult,
+    CancelToken? cancelToken,
+    String? authorizationToken,
+    Params? params,
+    String? subDomain,
     dynamic acceptedLanguage,
-    CacheOptions options,
+    CacheOptions? options,
     ResponseType responseType = ResponseType.json,
-    CachePolicy cachePolicy,
-    Map<String, dynamic> extra,
-    Map<String, dynamic> headers,
-    Map<String, dynamic> queryParameters,
+    CachePolicy? cachePolicy,
+    Map<String, dynamic>? extra,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
-    T Function(dynamic) fromJson,
+    T Function(dynamic)? fromJson,
   }) {
     if (T == BaseApiResponse) {
       throw FlutterError(
@@ -179,7 +179,7 @@ class BaseRestClient {
     };
     String newBaseUrl = baseUrl;
     if (subDomain != null) {
-      var baseUri = Uri.tryParse(newBaseUrl);
+      var baseUri = Uri.tryParse(newBaseUrl)!;
       var splitHost = baseUri.host.split('.');
       if (splitHost.length >= 3) {
         splitHost[0] = subDomain;
@@ -221,7 +221,7 @@ class BaseRestClient {
     }
     final response = result.then((result) {
       print(result.data);
-      T value;
+      T? value;
       if (mockedResult == null) {
         if (fromJson != null) {
           value = fromJson(result.data);
@@ -253,16 +253,16 @@ class BaseRestClient {
   RequestResult<T> download<T>(
     RequestMethod method,
     String path, {
-    CancelToken cancelToken,
-    String authorizationToken,
-    Params params,
-    String subDomain,
+    CancelToken? cancelToken,
+    String? authorizationToken,
+    Params? params,
+    String? subDomain,
     dynamic acceptedLanguage,
-    CacheOptions options,
-    CachePolicy cachePolicy,
-    Map<String, dynamic> extra,
-    Map<String, dynamic> headers,
-    Map<String, dynamic> queryParameters,
+    CacheOptions? options,
+    CachePolicy? cachePolicy,
+    Map<String, dynamic>? extra,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
   }) {
     if (T == BaseApiResponse) {
@@ -331,7 +331,7 @@ class BaseRestClient {
       return progress;
     };
     dio.options.baseUrl = baseUrl;
-    Future<Response<ResponseBody>> result = dio.download(path, null,
+    Future<Response<ResponseBody?>> result = dio.download(path, null,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
         onReceiveProgress: _progressListener,
@@ -339,7 +339,7 @@ class BaseRestClient {
             method: method.method,
             headers: headers,
             extra: extra),
-        data: body);
+        data: body).then((value) => value as Response<ResponseBody?>);
     final _stream =
         result.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
     _stream.listen((event) {},
@@ -355,9 +355,9 @@ class BaseRestClient {
 }
 
 class RequestResult<T> {
-  final CancelToken cancelToken;
-  final Future<Response<T>> resultFuture;
-  final Stream<double> progress;
+  final CancelToken? cancelToken;
+  final Future<Response<T>>? resultFuture;
+  final Stream<double>? progress;
 
   const RequestResult({this.cancelToken, this.resultFuture, this.progress});
 }

@@ -9,10 +9,10 @@ abstract class UserDependantProvider<Data> extends BaseProviderBloc<Data>
   final BaseUserBloc userBloc;
 
   UserDependantProvider(this.userBloc,
-      {Data initialData,
+      {Data? initialData,
       bool enableRefresh = true,
       bool enableRetry = true,
-      LifecycleObserver lifecycleObserver})
+      LifecycleObserver? lifecycleObserver})
       : super(
             initialDate: initialData,
             getOnCreate: false,

@@ -12,28 +12,28 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
     extends BaseConverterBloc<Output, Output> {
   final int searchDelayMillis;
 
-  get source => CombineLatestStream.combine3<ProviderState<Output>, Filtering,
+  get source => CombineLatestStream.combine3<ProviderState<Output>, Filtering?,
               String, ProviderState<Output>>(
-          super.source, filterStream, queryStream, (a, b, c) => a)
+          super.source!, filterStream, queryStream, (a, b, c) => a)
       .asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   BaseListingBloc(
       {this.searchDelayMillis = 1000,
-      BaseProviderBloc<Output> sourceBloc,
-      Output currentData})
+      BaseProviderBloc<Output>? sourceBloc,
+      Output? currentData})
       : super(sourceBloc: sourceBloc, currentData: currentData);
 
   Output Function(Output input) get converter =>
       (output) => applyFilter(output, filter, query);
 
-  Output applyFilter(Output output, Filtering filter, String query) {
+  Output applyFilter(Output output, Filtering? filter, String query) {
     return output;
   }
 
-  final _filterSubject = BehaviorSubject<Filtering>()..value = null;
-  Stream<Filtering> get filterStream => _filterSubject.shareValue();
-  Filtering get filter => _filterSubject.value;
-  set filter(Filtering filter) {
+  final _filterSubject = BehaviorSubject<Filtering?>()..value = null;
+  Stream<Filtering?> get filterStream => _filterSubject.shareValue();
+  Filtering? get filter => _filterSubject.valueOrNull;
+  set filter(Filtering? filter) {
     _filterSubject.add(filter);
   }
 

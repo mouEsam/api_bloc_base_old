@@ -6,6 +6,6 @@ abstract class BasePaginatedConverterBloc<Input, Output>
     extends BaseConverterBloc<Input, Output>
     with PaginatedMixin<Input, Output> {
   BasePaginatedConverterBloc(
-      {BaseProviderBloc<Input> sourceBloc, Output currentData})
+      {BaseProviderBloc<Input>? sourceBloc, Output? currentData})
       : super(currentData: currentData, sourceBloc: sourceBloc);
 }

@@ -7,7 +7,7 @@ abstract class BaseUserAwareBloc<Output> extends BaseIndependentBloc<Output>
   final BaseUserBloc userBloc;
 
   BaseUserAwareBloc(this.userBloc,
-      {List<Stream<ProviderState>> sources = const [], Output currentData})
+      {List<Stream<ProviderState>> sources = const [], Output? currentData})
       : super(currentData: currentData, sources: sources) {
     setUpUserListener();
   }

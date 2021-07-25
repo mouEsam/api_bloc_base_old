@@ -5,5 +5,5 @@ abstract class Entity extends Equatable {
 
   get stringify => true;
 
-  List<String> get serverSuccessMessages => null;
+  List<String>? get serverSuccessMessages => null;
 }

@@ -12,15 +12,15 @@ export 'working_state.dart';
 
 abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Output> {
-  StreamSubscription _subscription;
+  StreamSubscription? _subscription;
 
-  StreamSubscription _inputSubscription;
+  StreamSubscription? _inputSubscription;
 
   get initialState => LoadingState();
 
-  Stream<provider.ProviderState<Input>> get source => sourceBloc?.stateStream;
+  Stream<provider.ProviderState<Input>>? get source => sourceBloc?.stateStream;
 
-  final provider.BaseProviderBloc<Input> sourceBloc;
+  final provider.BaseProviderBloc<Input>? sourceBloc;
 
   final _eventsSubject =
       StreamController<provider.ProviderState<Input>>.broadcast();
@@ -29,7 +29,8 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<provider.ProviderState<Input>> get eventStream =>
       async.LazyStream(() => _eventsSubject.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
-  final _statesSubject = BehaviorSubject<BlocState<Output>>();
+  final BehaviorSubject<BlocState<Output>> _statesSubject =
+      BehaviorSubject<BlocState<Output>>();
   Stream<BlocState<Output>> get stateStream =>
       async.LazyStream(() => _statesSubject.shareValue());
 
@@ -37,9 +38,9 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<Input> get inputStream => LazyStream(() => _inputSubject.stream);
   StreamSink<Input> get inputSink => _inputSubject.sink;
 
-  BaseConverterBloc({Output currentData, this.sourceBloc})
+  BaseConverterBloc({Output? currentData, this.sourceBloc})
       : super(currentData) {
-    listen((state) {
+    stream.listen((state) {
       _statesSubject.add(state);
     });
     _inputSubscription = inputStream.listen(handleData, onError: (e, s) {
@@ -57,10 +58,10 @@ abstract class BaseConverterBloc<Input, Output>
   }
 
   void clean() {
-    currentData = null;
+    // currentData = null;
   }
 
-  Output Function(Input input) get converter => null;
+  Output Function(Input input)? get converter => null;
 
   void handleEvent(provider.ProviderState event) {
     if (event is provider.ProviderLoadingState<Input>) {
@@ -87,7 +88,7 @@ abstract class BaseConverterBloc<Input, Output>
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      setData(converter(event));
+      setData(converter!(event));
     }
   }
 
@@ -98,18 +99,19 @@ abstract class BaseConverterBloc<Input, Output>
   }
 
   @mustCallSuper
-  Future<Output> getData([bool refresh = false]) async {
+  Future<Output?> getData([bool refresh = false]) async {
     if (!refresh) emitLoading();
     return null;
   }
 
-  Future<Output> reset() async {
-    currentData = null;
+  Future<Output?> reset() async {
+    //currentData = null;
+    wasInitialized = false;
     return getData();
   }
 
   @mustCallSuper
-  Future<Output> refresh() async {
+  Future<Output?> refresh() async {
     sourceBloc?.refresh();
     return getData(true);
   }

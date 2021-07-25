@@ -7,7 +7,7 @@ class ProviderState<T> extends Equatable {
   bool get stringify => true;
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class ProviderLoadingState<T> extends ProviderState<T> {}
@@ -20,14 +20,14 @@ class ProviderLoadedState<T> extends ProviderState<T> {
   const ProviderLoadedState(this.data);
 
   @override
-  List<Object> get props => [this.data];
+  List<Object?> get props => [this.data];
 }
 
 class ProviderErrorState<T> extends ProviderState<T> {
-  final String message;
+  final String? message;
 
   const ProviderErrorState(this.message);
 
   @override
-  List<Object> get props => [this.message];
+  List<Object?> get props => [this.message];
 }
