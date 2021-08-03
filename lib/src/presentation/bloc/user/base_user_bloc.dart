@@ -64,7 +64,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Future<ResponseEntity> get signOutApi;
 
-  Future<ResponseEntity?> signOut() async {
+  Future<ResponseEntity> signOut() async {
     final result = await signOutApi;
     final actualLogOut = () {
       userDefaults.setSignedAccount(null);
@@ -74,7 +74,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     if (result is Success ||
         (result is Failure && result is! InternetFailure)) {
       actualLogOut();
-      return null;
+      return Success();
     } else {
       return result;
     }

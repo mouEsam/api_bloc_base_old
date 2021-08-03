@@ -23,7 +23,7 @@ abstract class BaseRepository {
   String get defaultError => 'Error';
   String get internetError => 'Internet Error';
 
-  Result<z.Either<ResponseEntity?, S?>>
+  Result<z.Either<ResponseEntity, S>>
       handleFullResponse<T extends BaseApiResponse, S>(
     RequestResult<T> result, {
     BaseResponseConverter? converter,
@@ -35,7 +35,7 @@ abstract class BaseRepository {
     converter ??= this.converter;
     final cancelToken = result.cancelToken;
     final future =
-        result.resultFuture!.then<z.Either<ResponseEntity?, S?>>((value) async {
+        result.resultFuture!.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S? result;
       print(converter!.hasData(data));
@@ -58,11 +58,11 @@ abstract class BaseRepository {
           }
         }
         interceptResult?.call(result);
-        return z.Right<ResponseEntity, S?>(result);
+        return z.Right<ResponseEntity, S>(result!);
       } else {
         print(data.runtimeType);
         print(data);
-        return z.Left<ResponseEntity?, S>(converter.response(data));
+        return z.Left<ResponseEntity, S>(converter.response(data)!);
       }
     }).catchError((e, s) async {
       print(e);
@@ -88,23 +88,23 @@ abstract class BaseRepository {
         );
       }
     });
-    return Result<z.Either<ResponseEntity?, S?>>(
+    return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
         resultFuture: future,
         progress: result.progress);
   }
 
-  Result<ResponseEntity?> handleApiResponse<T extends BaseApiResponse>(
+  Result<ResponseEntity> handleApiResponse<T extends BaseApiResponse>(
     RequestResult<T> result, {
     BaseResponseConverter? converter,
     void Function(T?)? interceptData,
   }) {
     converter ??= this.converter;
     final cancelToken = result.cancelToken;
-    final future = result.resultFuture!.then<ResponseEntity?>((value) async {
+    final future = result.resultFuture!.then<ResponseEntity>((value) async {
       final data = value.data;
       interceptData?.call(data);
-      return converter!.response(data);
+      return converter!.response(data)!;
     }).catchError((e, s) async {
       print(e);
       print(s);
@@ -116,22 +116,22 @@ abstract class BaseRepository {
         return Failure(defaultError);
       }
     });
-    return Result<ResponseEntity?>(
+    return Result<ResponseEntity>(
         cancelToken: cancelToken,
         resultFuture: future,
         progress: result.progress);
   }
 
-  Result<z.Either<ResponseEntity, S?>> handleOperation<S>(
+  Result<z.Either<ResponseEntity, S>> handleOperation<S>(
     RequestResult<S> result, {
     void Function(S?)? interceptResult,
   }) {
     final cancelToken = result.cancelToken;
     final future =
-        result.resultFuture!.then<z.Either<ResponseEntity, S?>>((value) async {
+        result.resultFuture!.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       interceptResult?.call(data);
-      return z.Right<ResponseEntity, S?>(data);
+      return z.Right<ResponseEntity, S>(data!);
     }).catchError((e, s) async {
       print(e);
       print(s);
@@ -149,9 +149,68 @@ abstract class BaseRepository {
         );
       }
     });
-    return Result<z.Either<ResponseEntity, S?>>(
+    return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
         resultFuture: future,
         progress: result.progress);
+  }
+
+  FutureOr<z.Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
+      [String? customErrorIfNoMessage,
+      Failure createFailure(String message)?]) {
+    try {
+      final workSync = work();
+      if (workSync is Future<T>) {
+        Future<T> workAsync = workSync;
+        return workAsync
+            .then<z.Either<Failure, T>>((value) => z.Right<Failure, T>(value))
+            .catchError((e, s) {
+          print(e);
+          print(s);
+          return handleError<T>(e,
+              createFailure: createFailure,
+              customErrorIfNoMessage: customErrorIfNoMessage);
+        });
+      } else {
+        T result = workSync;
+        return z.Right(result);
+      }
+    } catch (e, s) {
+      print(e);
+      print(s);
+      return handleError<T>(e,
+          createFailure: createFailure,
+          customErrorIfNoMessage: customErrorIfNoMessage);
+    }
+  }
+
+  z.Left<Failure, T> handleError<T>(error,
+      {String? customErrorIfNoMessage,
+      Failure createFailure(String message)?}) {
+    String? message = getErrorMessage(error, customErrorIfNoMessage);
+    createFailure ??= (message) => Failure(message);
+    return z.Left(createFailure(message!));
+  }
+
+  FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr work(),
+      [String? customErrorIfNoMessage]) async {
+    try {
+      await work();
+      return Success();
+    } catch (e, s) {
+      print(e);
+      print(s);
+      return Failure(getErrorMessage(e, customErrorIfNoMessage));
+    }
+  }
+
+  String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
+    String? message;
+    try {
+      message = error.message;
+    } catch (e, s) {
+      message ??= customErrorIfNoMessage ?? defaultError;
+    }
+    return message;
   }
 }

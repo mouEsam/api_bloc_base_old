@@ -7,6 +7,7 @@ mixin UserDependantProviderMixin<Data> on BaseProviderBloc<Data> {
   BaseUserBloc? get userBloc => null;
   String? authToken;
   get userId => userBloc!.currentUser?.id;
+  String get requireAuthToken => authToken!;
   StreamSubscription? _subscription;
 
   void setUpUserListener() {

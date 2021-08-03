@@ -5,13 +5,14 @@ import 'package:api_bloc_base/src/presentation/bloc/base/independant_mixin.dart'
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
 mixin UserDependantMixin<Data> on IndependentMixin<Data> {
-  BaseUserBloc? get userBloc => null;
+  BaseUserBloc get userBloc;
   String? authToken;
-  get userId => userBloc!.currentUser?.id;
+  get userId => userBloc.currentUser?.id;
+  String get requireAuthToken => authToken!;
   StreamSubscription? _subscription;
 
   void setUpUserListener() {
-    _subscription = userBloc!.userStream.listen(
+    _subscription = userBloc.userStream.listen(
       (user) {
         final newToken = user?.accessToken;
         if (newToken != null) {

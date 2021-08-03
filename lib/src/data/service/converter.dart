@@ -19,9 +19,9 @@ abstract class BaseResponseConverter<T extends BaseApiResponse?, X> {
     return converter;
   }
 
-  X? resolveConverter<I, X>(I? input) {
-    final converter = getConverter(I, X);
-    return converter?.convert(input);
+  X resolveConverter<I, X>(I? input) {
+    final converter = getConverter(I, X)!;
+    return converter.convert(input);
   }
 
   List<X> resolveListConverter<X, Y>(List<Y>? input) {
@@ -63,7 +63,9 @@ abstract class BaseResponseConverter<T extends BaseApiResponse?, X> {
 }
 
 abstract class BaseModelConverter<Input, Output> {
-  const BaseModelConverter();
+  final bool failIfError;
+
+  const BaseModelConverter([this.failIfError = false]);
 
   Type get inputType => Input;
   Type get outputType => Output;
@@ -71,16 +73,27 @@ abstract class BaseModelConverter<Input, Output> {
   bool acceptsInput(Type input) => input == inputType;
   bool returnsOutput(Type output) => output == outputType;
 
-  Output? convert(Input? initialData);
+  Output? convert(Input initialData);
 
   Output? convertSingle(Input? initialData) {
-    final result = initialData == null ? null : convert(initialData);
+    Output? result;
+    if (failIfError) {
+      result = initialData == null ? null : convert(initialData);
+    } else {
+      try {
+        result = initialData == null ? null : convert(initialData);
+      } catch (e, s) {
+        print(e);
+        print(s);
+        result = null;
+      }
+    }
     return result;
   }
 
   List<Output> convertList(List<Input?>? initialData) {
     final result = initialData
-            ?.map((itemModel) => convert(itemModel))
+            ?.map((itemModel) => convertSingle(itemModel))
             .whereType<Output>()
             .toList() ??
         <Output>[];
