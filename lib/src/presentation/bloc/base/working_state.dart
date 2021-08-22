@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/src/data/model/remote/base_errors.dart';
+import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:equatable/equatable.dart';
 
 class BlocState<T> extends Equatable {
@@ -51,17 +52,24 @@ class OnGoingOperationState<T> extends LoadedState<T> implements Operation {
 
 class FailedOperationState<T> extends LoadedState<T> implements Operation {
   final String? operationTag;
-  final String? errorMessage;
-  final BaseErrors? errors;
+  final Failure? failure;
   final Function()? retry;
 
   const FailedOperationState(T data,
-      {this.operationTag, this.errorMessage, this.errors, this.retry})
+      {this.operationTag, this.failure, this.retry})
       : super(data);
+
+  FailedOperationState.message(T data,
+      {this.operationTag, String? message, BaseErrors? errors, this.retry})
+      : failure = Failure(message, errors),
+        super(data);
+
+  String? get errorMessage => failure?.message;
+  BaseErrors? get errors => failure?.errors;
 
   @override
   List<Object?> get props =>
-      [...super.props, this.operationTag, this.errorMessage, this.retry];
+      [...super.props, this.operationTag, this.failure, this.retry];
 }
 
 class SuccessfulOperationState<T> extends LoadedState<T> implements Operation {

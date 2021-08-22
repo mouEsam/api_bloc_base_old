@@ -135,8 +135,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       bool failure = true,
       bool success = true}) {
     if (l is Failure) {
-      return failedOperation(l.message,
-          doEmit: failure, errors: l.errors, operationTag: operationTag);
+      return failedOperation(l, doEmit: failure, operationTag: operationTag);
     } else if (l is Success) {
       return successfulOperation(l.message,
           doEmit: success, operationTag: operationTag);
@@ -189,12 +188,24 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
     return op;
   }
 
-  FailedOperationState failedOperation(String? message,
+  FailedOperationState failedOperationMessage(String? message,
       {bool doEmit = true,
       BaseErrors? errors,
       String operationTag = _DEFAULT_OPERATION}) {
+    final op = FailedOperationState.message(currentData,
+        message: message, operationTag: operationTag, errors: errors);
+    return _failedOperation(op, doEmit: doEmit, operationTag: operationTag);
+  }
+
+  FailedOperationState failedOperation(Failure? failure,
+      {bool doEmit = true, String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState(currentData,
-        errorMessage: message, operationTag: operationTag, errors: errors);
+        failure: failure, operationTag: operationTag);
+    return _failedOperation(op, doEmit: doEmit, operationTag: operationTag);
+  }
+
+  FailedOperationState _failedOperation(FailedOperationState<Output> op,
+      {bool doEmit = true, String operationTag = _DEFAULT_OPERATION}) {
     if (doEmit) emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
