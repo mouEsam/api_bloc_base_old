@@ -193,7 +193,7 @@ abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
       BaseErrors? errors,
       String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState.message(currentData,
-        message: message, operationTag: operationTag, errors: errors);
+        errorMessage: message, operationTag: operationTag, errors: errors);
     return _failedOperation(op, doEmit: doEmit, operationTag: operationTag);
   }
 
