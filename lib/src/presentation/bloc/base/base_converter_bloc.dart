@@ -29,6 +29,21 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<provider.ProviderState<Input>> get eventStream =>
       async.LazyStream(() => _eventsSubject.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
+
+  Stream<provider.ProviderState<Output>> get providerStream =>
+      async.LazyStream(() => stateStream
+          .map((event) {
+            if (event is LoadingState<Output>) {
+              return provider.ProviderLoadingState<Output>();
+            } else if (event is LoadedState<Output>) {
+              return provider.ProviderLoadedState<Output>(event.data);
+            } else if (event is ErrorState<Output>) {
+              return provider.ProviderErrorState<Output>(event.message);
+            }
+          })
+          .whereType<provider.ProviderState<Output>>()
+          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
+
   final BehaviorSubject<BlocState<Output>> _statesSubject =
       BehaviorSubject<BlocState<Output>>();
   Stream<BlocState<Output>> get stateStream =>
