@@ -44,10 +44,10 @@ abstract class BaseConverterBloc<Input, Output>
           .whereType<provider.ProviderState<Output>>()
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
-  final BehaviorSubject<BlocState<Output>> _statesSubject =
-      BehaviorSubject<BlocState<Output>>();
+  // final BehaviorSubject<BlocState<Output>> _statesSubject =
+  //     BehaviorSubject<BlocState<Output>>();
   Stream<BlocState<Output>> get stateStream =>
-      async.LazyStream(() => _statesSubject.shareValue());
+      async.LazyStream(() => stream.startWith(state).shareValue());
 
   final _inputSubject = StreamController<Input>.broadcast();
   Stream<Input> get inputStream => LazyStream(() => _inputSubject.stream);
@@ -55,9 +55,9 @@ abstract class BaseConverterBloc<Input, Output>
 
   BaseConverterBloc({Output? currentData, this.sourceBloc})
       : super(currentData) {
-    stream.listen((state) {
-      _statesSubject.add(state);
-    });
+    // stream.listen((state) {
+    //   _statesSubject.add(state);
+    // });
     _inputSubscription = inputStream.listen(handleData, onError: (e, s) {
       print(e);
       print(s);
@@ -136,7 +136,7 @@ abstract class BaseConverterBloc<Input, Output>
     _inputSubscription?.cancel();
     _subscription?.cancel();
     _inputSubject.close();
-    _statesSubject.drain().then((value) => _statesSubject.close());
+    // _statesSubject.drain().then((value) => _statesSubject.close());
     _eventsSubject.close();
     return super.close();
   }
