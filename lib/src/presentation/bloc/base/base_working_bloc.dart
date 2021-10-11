@@ -6,13 +6,13 @@ import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'base_bloc.dart';
 import 'base_converter_bloc.dart';
 
 export 'working_state.dart';
 
-abstract class BaseWorkingBloc<Output> extends Cubit<BlocState<Output>> {
+abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   String get notFoundMessage => 'foundNothing';

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
@@ -17,7 +18,7 @@ class BaseBloc extends Cubit<int> {
   BaseBloc() : super(0);
 }
 
-abstract class BaseProviderBloc<Data> extends Cubit<ProviderState<Data>>
+abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     implements LifecycleAware {
   final Duration? refreshInterval = Duration(seconds: 30);
   final LifecycleObserver? observer;
