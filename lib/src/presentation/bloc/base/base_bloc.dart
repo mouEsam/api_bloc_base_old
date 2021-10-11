@@ -10,7 +10,7 @@ abstract class BaseCubit<State> extends Cubit<State> {
   @override
   get stream => super.stream.shareValueSeeded(state).map((e) => state);
 
-  List<ValueNotifier> get notifiers => [];
+  List<ChangeNotifier> get notifiers => [];
 
   @override
   Future<void> close() {
