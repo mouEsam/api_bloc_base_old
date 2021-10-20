@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params.dart';
+import 'package:api_bloc_base/src/data/model/remote/upload_file.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -50,8 +51,7 @@ class BaseRestClient {
       store: cacheOptions?.store ?? MemCacheStore(), // Required.
       policy: cachePolicy ??
           cacheOptions?.policy ??
-          CachePolicy
-              .request, // Default. Requests first and caches response.
+          CachePolicy.request, // Default. Requests first and caches response.
       hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ??
           [
             401,
@@ -143,7 +143,13 @@ class BaseRestClient {
           final _data = FormData();
           for (final entry in formData.entries) {
             if (entry.value != null) {
-              if (entry.value is File) {
+              if (entry.value is UploadFile) {
+                final file = entry.value as UploadFile;
+                _data.files.add(MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(file.file.path,
+                        filename: file.fileName)));
+              } else if (entry.value is File) {
                 final file = entry.value as File;
                 _data.files.add(MapEntry(
                     entry.key,
@@ -153,9 +159,9 @@ class BaseRestClient {
               } else if (entry.value is List) {
                 final list = entry.value as List;
                 list.where((e) => e != null).forEach((value) =>
-                    _data.fields.add(MapEntry(entry.key, value.toString())));
+                    _data.fields.add(MapEntry(entry.key, jsonEncode(value))));
               } else {
-                _data.fields.add(MapEntry(entry.key, entry.value.toString()));
+                _data.fields.add(MapEntry(entry.key, jsonEncode(entry.value)));
               }
             }
           }
@@ -213,7 +219,8 @@ class BaseRestClient {
             method: method.method,
             headers: headers,
             extra: extra,
-            baseUrl: newBaseUrl, path: path),
+            baseUrl: newBaseUrl,
+            path: path),
         statusCode: 200,
         statusMessage: 'success',
       ));
@@ -331,15 +338,15 @@ class BaseRestClient {
       return progress;
     };
     dio.options.baseUrl = baseUrl;
-    Future<Response<ResponseBody?>> result = dio.download(path, null,
-        queryParameters: queryParameters,
-        cancelToken: cancelToken,
-        onReceiveProgress: _progressListener,
-        options: Options(
-            method: method.method,
-            headers: headers,
-            extra: extra),
-        data: body).then((value) => value as Response<ResponseBody?>);
+    Future<Response<ResponseBody?>> result = dio
+        .download(path, null,
+            queryParameters: queryParameters,
+            cancelToken: cancelToken,
+            onReceiveProgress: _progressListener,
+            options:
+                Options(method: method.method, headers: headers, extra: extra),
+            data: body)
+        .then((value) => value as Response<ResponseBody?>);
     final _stream =
         result.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
     _stream.listen((event) {},
