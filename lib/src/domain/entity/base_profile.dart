@@ -4,12 +4,16 @@ import 'entity.dart';
 
 abstract class BaseProfile extends Entity {
   const BaseProfile({
-    this.accessToken,
-    this.active,
+    required this.accessToken,
+    this.refreshToken,
+    this.expiration,
+    required this.active,
   });
 
-  final String? accessToken;
-  final bool? active;
+  final String accessToken;
+  final String? refreshToken;
+  final DateTime? expiration;
+  final bool active;
 
   @JsonKey(ignore: true)
   dynamic get id;
@@ -20,6 +24,8 @@ abstract class BaseProfile extends Entity {
   @override
   List<Object?> get props => [
         this.accessToken,
+        this.refreshToken,
+        this.expiration,
       ];
 
   Map<String, dynamic> toJson();

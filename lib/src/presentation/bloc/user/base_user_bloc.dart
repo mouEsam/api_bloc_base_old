@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/model/remote/auth_params.dart';
+import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
-import 'package:api_bloc_base/src/data/source/local/user_defaults.dart';
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
@@ -15,10 +15,9 @@ import 'base_user_state.dart';
 
 abstract class BaseUserBloc<T extends BaseProfile>
     extends BaseCubit<BaseUserState> {
-  Timer? _timer;
-  bool firstLoginEmit = true;
+  final BaseAuthRepository authRepository;
 
-  final UserDefaults userDefaults;
+  Timer? _timer;
 
   final BehaviorSubject<T?> _userAccount = BehaviorSubject<T?>();
 
@@ -37,81 +36,99 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   T? get currentUser => _userAccount.value;
 
-  BaseUserBloc(this.userDefaults) : super(UserLoadingState()) {
+  BaseUserBloc(this.authRepository) : super(UserLoadingState()) {
     autoSignIn();
     stream.listen((state) {
       _timer?.cancel();
       T? user;
       if (state is SignedOutState) {
         _detailsSubscription?.cancel();
-      } else if (state is BaseSignedInState) {
-        user = state.userAccount as T?;
-        if (shouldProfileRefresh(state)) {
-          _timer = Timer.periodic(Duration(seconds: 30), (_) => autoSignIn());
+      } else if (state is BaseSignedInState<T>) {
+        user = state.userAccount;
+        final refreshDuration = shouldProfileRefresh(user);
+        if (refreshDuration != null) {
+          setRefreshTimer(refreshDuration);
         }
       }
       _userAccount.add(user);
     });
   }
 
-  bool shouldProfileRefresh(BaseSignedInState state) => true;
+  void setRefreshTimer(Duration refreshDuration) {
+    _timer = Timer.periodic(refreshDuration, (_) => autoSignIn(true));
+  }
 
-  Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]);
+  Duration? shouldProfileRefresh(T state) => Duration(seconds: 30);
+
+  Result<Either<ResponseEntity, T>> internalAutoSignIn();
+
+  Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]) async {
+    if (!silent) {
+      emit(UserLoadingState());
+    }
+    final result = await internalAutoSignIn().resultFuture!;
+    result.fold((l) {
+      if (l is RefreshFailure<T>) {
+        handleFailedRefresh(l.oldProfile, silent);
+      } else {
+        handleUser(null);
+      }
+    }, (user) => handleUser(user));
+    return result;
+  }
+
+  void handleFailedRefresh(T oldAccount, bool silent) {
+    final isValid = oldAccount.expiration?.isAfter(DateTime.now());
+    if (isValid != false) {
+      handleUser(oldAccount);
+    } else {
+      if (silent) {
+        setRefreshTimer(Duration(seconds: 5));
+      } else {
+        emit(TokenRefreshFailedState(oldAccount));
+      }
+    }
+  }
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
-  Future<ResponseEntity> get signOutApi;
-
-  Future<ResponseEntity> signOut() async {
-    final result = await signOutApi;
-    final actualLogOut = () {
-      userDefaults.setSignedAccount(null);
-      userDefaults.setUserToken(null);
-      handleUser(null);
-    };
-    if (result is Success ||
-        (result is Failure && result is! InternetFailure)) {
-      actualLogOut();
-      return Success();
-    } else {
-      return result;
-    }
+  Result<ResponseEntity> signOut() {
+    final op = authRepository.logout(currentUser!);
+    op.resultFuture.then((result) {
+      if (result is Success ||
+          (result is Failure && result is! InternetFailure)) {
+        handleUser(null);
+        return Success();
+      } else {
+        return result;
+      }
+    });
+    return op;
   }
 
   Result<ResponseEntity> offlineSignOut() {
-    final one = userDefaults.setSignedAccount(null);
-    final two = userDefaults.setUserToken(null);
-    final result = Future.wait([one, two]).then<ResponseEntity>((value) {
-      handleUser(null);
-      return Success();
-    }).catchError((e, s) {
-      print(e);
-      print(s);
-      return Failure(e.message);
+    final op = authRepository.offlineSignOut();
+    op.resultFuture.then((result) {
+      if (result is Success ||
+          (result is Failure && result is! InternetFailure)) {
+        handleUser(null);
+        return Success();
+      } else {
+        return result;
+      }
     });
-    return Result(resultFuture: result);
+    return op;
   }
 
   Future<void> handleUser(T? user) async {
     print(user);
     if (user == null) {
-      userDefaults.setSignedAccount(null);
-      userDefaults.setUserToken(null);
       emit(SignedOutState());
     } else {
-      if (user.active!) {
-        userDefaults.setSignedAccount(user);
-        userDefaults.setUserToken(user.accessToken);
-      }
-      firstLoginEmit = isFirstLogin(user);
       emitSignedUser(user);
     }
-  }
-
-  bool isFirstLogin(BaseProfile user) {
-    return firstLoginEmit;
   }
 
   void emitSignedUser(T user);

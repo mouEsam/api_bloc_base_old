@@ -9,10 +9,10 @@ import 'package:dio/dio.dart';
 
 class Result<T> {
   final CancelToken? cancelToken;
-  final Future<T>? resultFuture;
+  final Future<T> resultFuture;
   final Stream<double>? progress;
 
-  const Result({this.cancelToken, this.resultFuture, this.progress});
+  const Result({this.cancelToken, required this.resultFuture, this.progress});
 }
 
 abstract class BaseRepository {
@@ -32,18 +32,19 @@ abstract class BaseRepository {
     FutureOr<S> Function(S data)? dataConverter,
     FutureOr<S> Function()? failureRecovery,
   }) {
-    converter ??= this.converter;
+    final _converter = converter ?? this.converter;
     final cancelToken = result.cancelToken;
     final future =
         result.resultFuture!.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S? result;
-      print(converter!.hasData(data));
-      if (converter.hasData(data)) {
-        interceptData?.call(data);
-        result = converter.convert(data);
-      } else if (failureRecovery != null) {
-        result = await failureRecovery();
+      if (data != null) {
+        if (_converter.hasData(data)) {
+          interceptData?.call(data);
+          result = _converter.convert(data);
+        } else if (failureRecovery != null) {
+          result = await failureRecovery();
+        }
       }
       if (result != null) {
         if (dataConverter != null) {
@@ -62,7 +63,7 @@ abstract class BaseRepository {
       } else {
         print(data.runtimeType);
         print(data);
-        return z.Left<ResponseEntity, S>(converter.response(data)!);
+        return z.Left<ResponseEntity, S>(_converter.response(data!)!);
       }
     }).catchError((e, s) async {
       print(e);
@@ -104,7 +105,7 @@ abstract class BaseRepository {
     final future = result.resultFuture!.then<ResponseEntity>((value) async {
       final data = value.data;
       interceptData?.call(data);
-      return converter!.response(data)!;
+      return converter!.response(data!)!;
     }).catchError((e, s) async {
       print(e);
       print(s);

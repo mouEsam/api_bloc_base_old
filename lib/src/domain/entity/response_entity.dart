@@ -2,6 +2,8 @@ import 'package:api_bloc_base/src/data/model/remote/base_errors.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 
+import 'base_profile.dart';
+
 class ResponseEntity extends Equatable {
   final String? message;
 
@@ -41,4 +43,22 @@ class Cancellation extends ResponseEntity {
 
   @override
   List<Object?> get props => [...super.props];
+}
+
+class NoAccountSavedFailure extends Failure {
+  const NoAccountSavedFailure(String message, [BaseErrors? errors])
+      : super(message, errors);
+
+  @override
+  get props => [...super.props];
+}
+
+class RefreshFailure<T extends BaseProfile> extends Failure {
+  final T oldProfile;
+
+  const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])
+      : super(message, errors);
+
+  @override
+  get props => [...super.props, this.oldProfile];
 }

@@ -2,7 +2,7 @@ import 'package:api_bloc_base/src/data/model/remote/base_api_response.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 
-abstract class BaseResponseConverter<T extends BaseApiResponse?, X> {
+abstract class BaseResponseConverter<T extends BaseApiResponse, X> {
   final String Function(String)? handlePath;
 
   const BaseResponseConverter([this.handlePath]);
@@ -40,21 +40,21 @@ abstract class BaseResponseConverter<T extends BaseApiResponse?, X> {
         initialData?.message != null;
   }
 
-  bool isSuccess(BaseApiResponse? initialData) {
-    return initialData?.success != null;
+  bool isSuccess(BaseApiResponse initialData) {
+    return initialData.success != null;
   }
 
-  bool hasData(BaseApiResponse? initialData) {
+  bool hasData(BaseApiResponse initialData) {
     return !isError(initialData) && !isSuccess(initialData);
   }
 
-  ResponseEntity? response(BaseApiResponse? initialData) {
+  ResponseEntity? response(BaseApiResponse initialData) {
     if (isError(initialData)) {
       return Failure(
           initialData!.message ?? initialData.error ?? defaultErrorMessage,
           initialData.errors);
     } else if (isSuccess(initialData)) {
-      return Success(initialData!.success);
+      return Success(initialData.success);
     }
     return null;
   }

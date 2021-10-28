@@ -32,3 +32,12 @@ abstract class BaseSignedInState<T extends BaseProfile> extends BaseUserState {
 class SignedOutState extends BaseUserState {
   const SignedOutState();
 }
+
+class TokenRefreshFailedState<T extends BaseProfile> extends SignedOutState {
+  final T oldAccount;
+
+  TokenRefreshFailedState(this.oldAccount) : super();
+
+  @override
+  List<Object> get props => [...super.props, this.oldAccount];
+}
