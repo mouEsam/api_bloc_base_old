@@ -15,7 +15,7 @@ import 'base_user_state.dart';
 
 abstract class BaseUserBloc<T extends BaseProfile>
     extends BaseCubit<BaseUserState> {
-  final BaseAuthRepository authRepository;
+  final BaseAuthRepository<T> authRepository;
 
   Timer? _timer;
 
@@ -60,13 +60,11 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Duration? shouldProfileRefresh(T state) => Duration(seconds: 30);
 
-  Result<Either<ResponseEntity, T>> internalAutoSignIn();
-
   Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]) async {
     if (!silent) {
       emit(UserLoadingState());
     }
-    final result = await internalAutoSignIn().resultFuture!;
+    final result = await authRepository.autoLogin().resultFuture;
     result.fold((l) {
       if (l is RefreshFailure<T>) {
         handleFailedRefresh(l.oldProfile, silent);

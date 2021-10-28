@@ -26,13 +26,14 @@ abstract class BaseRepository {
   Result<z.Either<ResponseEntity, S>>
       handleFullResponse<T extends BaseApiResponse, S>(
     RequestResult<T> result, {
-    BaseResponseConverter? converter,
+    BaseResponseConverter<T, S>? converter,
     void Function(T?)? interceptData,
     void Function(S?)? interceptResult,
     FutureOr<S> Function(S data)? dataConverter,
     FutureOr<S> Function()? failureRecovery,
   }) {
-    final _converter = converter ?? this.converter;
+    final _converter = converter ??
+        (this.converter as BaseResponseConverter<BaseApiResponse, S>);
     final cancelToken = result.cancelToken;
     final future =
         result.resultFuture!.then<z.Either<ResponseEntity, S>>((value) async {
