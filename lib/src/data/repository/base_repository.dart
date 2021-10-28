@@ -27,8 +27,8 @@ abstract class BaseRepository {
       handleFullResponse<T extends BaseApiResponse, S>(
     RequestResult<T> result, {
     BaseResponseConverter<T, S>? converter,
-    void Function(T?)? interceptData,
-    void Function(S?)? interceptResult,
+    void Function(T)? interceptData,
+    void Function(S)? interceptResult,
     FutureOr<S> Function(S data)? dataConverter,
     FutureOr<S> Function()? failureRecovery,
   }) {
@@ -59,7 +59,7 @@ abstract class BaseRepository {
             ));
           }
         }
-        interceptResult?.call(result);
+        interceptResult?.call(result!);
         return z.Right<ResponseEntity, S>(result!);
       } else {
         print(data.runtimeType);
@@ -99,14 +99,14 @@ abstract class BaseRepository {
   Result<ResponseEntity> handleApiResponse<T extends BaseApiResponse>(
     RequestResult<T> result, {
     BaseResponseConverter? converter,
-    void Function(T?)? interceptData,
+    void Function(T)? interceptData,
   }) {
-    converter ??= this.converter;
+    final _converter = converter ?? this.converter;
     final cancelToken = result.cancelToken;
     final future = result.resultFuture!.then<ResponseEntity>((value) async {
-      final data = value.data;
+      final data = value.data!;
       interceptData?.call(data);
-      return converter!.response(data!)!;
+      return _converter.response(data)!;
     }).catchError((e, s) async {
       print(e);
       print(s);

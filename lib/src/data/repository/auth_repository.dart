@@ -19,11 +19,11 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     return handleFullResponse<BaseUserResponse, T>(
       result,
       interceptResult: (result) {
-        if (result != null && result.active == true) {
+        if (result.active == true) {
           userDefaults.setSignedAccount(result);
           userDefaults.setUserToken(result.accessToken);
         }
-        print(result?.toJson());
+        print(result.toJson());
       },
     );
   }
