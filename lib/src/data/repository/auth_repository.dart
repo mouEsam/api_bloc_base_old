@@ -11,9 +11,22 @@ abstract class BaseAuthRepository<T extends BaseProfile>
 
   String get noAccountSavedInError;
 
-  Result<Either<ResponseEntity, T>> login(BaseAuthParams params);
-
+  RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
   RequestResult<BaseUserResponse> refresh(T account);
+
+  Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
+    final result = internalLogin(params);
+    return handleFullResponse<BaseUserResponse, T>(
+      result,
+      interceptResult: (result) {
+        if (result != null && result.active == true) {
+          userDefaults.setSignedAccount(result);
+          userDefaults.setUserToken(result.accessToken);
+        }
+        print(result?.toJson());
+      },
+    );
+  }
 
   Result<Either<ResponseEntity, T>> autoLogin() {
     final savedProfile = userDefaults.signedAccount
