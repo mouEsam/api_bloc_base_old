@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/data/model/remote/auth_params.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';

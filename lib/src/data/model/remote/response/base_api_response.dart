@@ -1,8 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'base_errors.dart';
+import '../params/base_errors.dart';
 
-export 'base_errors.dart';
+export '../params/base_errors.dart';
 
 part 'base_api_response.g.dart';
 

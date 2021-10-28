@@ -1,17 +1,19 @@
 import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class BaseAuthRepository<T extends BaseProfile>
     extends BaseRepository {
   final UserDefaults userDefaults;
+  final BaseResponseConverter<BaseUserResponse, T> converter;
 
-  const BaseAuthRepository(this.userDefaults);
+  const BaseAuthRepository(this.converter, this.userDefaults);
 
   String get noAccountSavedInError;
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params);
 
-  RequestResult<BaseApiResponse> refresh(T account);
+  RequestResult<BaseUserResponse> refresh(T account);
 
   Result<Either<ResponseEntity, T>> autoLogin() {
     final savedProfile = userDefaults.signedAccount
@@ -19,7 +21,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         .then<Either<ResponseEntity, T>>((account) {
       if (account is T) {
         final operation = refresh(account);
-        final result = handleFullResponse<BaseApiResponse, T>(operation);
+        final result = handleFullResponse<BaseUserResponse, T>(operation);
         return result.resultFuture.then((value) {
           value.forEach((r) {
             if (r.active == true) {

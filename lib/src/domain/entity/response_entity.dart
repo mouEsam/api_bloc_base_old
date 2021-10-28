@@ -1,4 +1,4 @@
-import 'package:api_bloc_base/src/data/model/remote/base_errors.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/base_errors.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 

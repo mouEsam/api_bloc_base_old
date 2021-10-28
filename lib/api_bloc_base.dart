@@ -7,10 +7,11 @@ export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';
 export 'package:sembast/timestamp.dart';
 
-export 'src/data/model/remote/auth_params.dart';
-export 'src/data/model/remote/base_api_response.dart';
-export 'src/data/model/remote/base_errors.dart';
-export 'src/data/model/remote/params.dart';
+export 'src/data/model/remote/params/auth_params.dart';
+export 'src/data/model/remote/params/base_errors.dart';
+export 'src/data/model/remote/params/params.dart';
+export 'src/data/model/remote/response/base_api_response.dart';
+export 'src/data/model/remote/response/base_user_response.dart';
 export 'src/data/repository/auth_repository.dart';
 export 'src/data/repository/base_repository.dart';
 export 'src/data/service/converter.dart';

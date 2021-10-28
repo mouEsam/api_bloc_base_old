@@ -4,8 +4,8 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:api_bloc_base/api_bloc_base.dart';
-import 'package:api_bloc_base/src/data/model/remote/params.dart';
-import 'package:api_bloc_base/src/data/model/remote/upload_file.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/params.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/upload_file.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';

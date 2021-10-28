@@ -1,4 +1,4 @@
-import 'package:api_bloc_base/src/data/model/remote/base_api_response.dart';
+import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 
