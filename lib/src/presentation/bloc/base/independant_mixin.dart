@@ -131,9 +131,7 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
   void startTries([bool userLogStateEvent = true]) {
     green = true;
     shouldBeGreen = userLogStateEvent || shouldBeGreen;
-    if (userLogStateEvent) {
-      subscription?.resume();
-    }
+    eventSubscription.resume();
     getData();
   }
 
@@ -141,8 +139,7 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
     green = false;
     shouldBeGreen = !userLogStateEvent && shouldBeGreen;
     _retrialTimer?.cancel();
-    subscription?.pause();
-    emitLoading();
+    eventSubscription.pause();
   }
 
   @override

@@ -12,7 +12,7 @@ export 'working_state.dart';
 
 abstract class BaseConverterBloc<Input, Output>
     extends BaseWorkingBloc<Output> {
-  StreamSubscription? subscription;
+  late final StreamSubscription eventSubscription;
 
   StreamSubscription? _inputSubscription;
 
@@ -64,7 +64,7 @@ abstract class BaseConverterBloc<Input, Output>
       print(s);
       emit(ErrorState(defaultError));
     });
-    subscription = eventStream.listen(handleEvent, onError: (e, s) {
+    eventSubscription = eventStream.listen(handleEvent, onError: (e, s) {
       print(this);
       print(e);
       print(s);
@@ -135,7 +135,7 @@ abstract class BaseConverterBloc<Input, Output>
   @override
   Future<void> close() {
     _inputSubscription?.cancel();
-    subscription?.cancel();
+    eventSubscription?.cancel();
     _inputSubject.close();
     // _statesSubject.drain().then((value) => _statesSubject.close());
     _eventsSubject.close();

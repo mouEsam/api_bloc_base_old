@@ -7,7 +7,7 @@ import 'package:equatable/equatable.dart';
 
 class PaginatedData<T> extends Equatable {
   final Map<int, T> data;
-  final bool? isThereMore;
+  final bool isThereMore;
   final int currentPage;
 
   const PaginatedData(this.data, this.isThereMore, this.currentPage);
@@ -45,7 +45,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     super.setData(newData);
   }
 
-  bool? canGetMore(newData) {
+  bool canGetMore(newData) {
     if (newData == null) {
       return false;
     } else if (newData is Iterable) {
