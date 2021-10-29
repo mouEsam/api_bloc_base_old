@@ -10,8 +10,14 @@ abstract class BaseUserAwareListingBloc<Output, Filtering extends FilterType>
   final BaseUserBloc userBloc;
 
   BaseUserAwareListingBloc(this.userBloc,
-      {List<Stream<ProviderState>> sources = const [], Output? currentData})
-      : super(currentData: currentData, sources: sources) {
+      {List<Stream<ProviderState>> sources = const [],
+      Output? currentData,
+      LifecycleObserver? lifecycleObserver})
+      : super(
+            currentData: currentData,
+            sources: sources,
+            lifecycleObserver: lifecycleObserver) {
     setUpUserListener();
+    setIndependenceUp();
   }
 }

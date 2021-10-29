@@ -9,7 +9,17 @@ import 'base_converter_bloc.dart';
 
 export 'working_state.dart';
 
-mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
+mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
+    implements LifecycleAware {
+  final Duration? refreshInterval = Duration(seconds: 30);
+
+  Timer? _retrialTimer;
+
+  bool green = false;
+  bool shouldBeGreen = false;
+
+  LifecycleObserver? get lifecycleObserver;
+
   List<Stream<provider.ProviderState>>? get sources;
 
   Stream<provider.ProviderState<Output>> get source {
@@ -50,6 +60,23 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
     return finalStream;
   }
 
+  void setIndependenceUp() {
+    lifecycleObserver?.addListener(this);
+    stream.listen((state) {
+      if (state is LoadedState && refreshInterval != null) {
+        _retrialTimer?.cancel();
+        _retrialTimer = Timer.periodic(refreshInterval!, (_) {
+          if (this.state is LoadedState) {
+            refresh();
+          }
+        });
+      }
+    }, onError: (e, s) {
+      print(e);
+      print(s);
+    });
+  }
+
   Output combineData(Output data) => data;
 
   @override
@@ -74,16 +101,19 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
 
   Result<Either<ResponseEntity, Output>> get dataSource;
 
-  Future<Output?> getData([bool refresh = false]) {
-    super.getData(refresh);
-    final data = dataSource;
-    return handleDataRequest(data, refresh);
+  Future<Output?> getData([bool refresh = false]) async {
+    if (green && shouldBeGreen) {
+      super.getData(refresh);
+      final data = dataSource;
+      return handleDataRequest(data, refresh);
+    }
+    return null;
   }
 
   Future<Output?> handleDataRequest(
       Result<Either<ResponseEntity, Output>> result, bool refresh) async {
     if (!refresh) emitLoading();
-    final future = await result.resultFuture!;
+    final future = await result.resultFuture;
     return future.fold<Output?>(
       (l) {
         handleEvent(ProviderErrorState<Output>(l.message));
@@ -98,8 +128,42 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output> {
     );
   }
 
+  void startTries([bool userLogStateEvent = true]) {
+    green = true;
+    shouldBeGreen = userLogStateEvent || shouldBeGreen;
+    if (userLogStateEvent) {
+      subscription?.resume();
+    }
+    getData();
+  }
+
+  void stopRetries([bool userLogStateEvent = true]) {
+    green = false;
+    shouldBeGreen = !userLogStateEvent && shouldBeGreen;
+    _retrialTimer?.cancel();
+    subscription?.pause();
+    emitLoading();
+  }
+
+  @override
+  void onResume() {
+    startTries(false);
+  }
+
+  @override
+  void onPause() {
+    stopRetries(false);
+  }
+
+  @override
+  void onDetach() {}
+
+  @override
+  void onInactive() {}
+
   @override
   Future<void> close() {
+    _retrialTimer?.cancel();
     _ownDataSubject.close();
     _finalDataSubject.drain().then((value) => _finalDataSubject.close());
     return super.close();

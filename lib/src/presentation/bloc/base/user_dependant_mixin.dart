@@ -9,10 +9,10 @@ mixin UserDependantMixin<Data> on IndependentMixin<Data> {
   String? authToken;
   get userId => userBloc.currentUser?.id;
   String get requireAuthToken => authToken!;
-  StreamSubscription? _subscription;
+  StreamSubscription? _userSubscription;
 
   void setUpUserListener() {
-    _subscription = userBloc.userStream.listen(
+    _userSubscription = userBloc.userStream.listen(
       (user) {
         final newToken = user?.accessToken;
         if (newToken != null) {
@@ -29,7 +29,7 @@ mixin UserDependantMixin<Data> on IndependentMixin<Data> {
 
   @override
   Future<void> close() {
-    _subscription?.cancel();
+    _userSubscription?.cancel();
     return super.close();
   }
 }

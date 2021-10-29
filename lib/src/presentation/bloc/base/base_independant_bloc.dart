@@ -10,9 +10,12 @@ export 'working_state.dart';
 abstract class BaseIndependentBloc<Output>
     extends BaseConverterBloc<Output, Output> with IndependentMixin<Output> {
   final List<Stream<provider.ProviderState>>? sources;
+  final LifecycleObserver? lifecycleObserver;
 
-  BaseIndependentBloc({this.sources = const [], Output? currentData})
+  BaseIndependentBloc(
+      {this.sources = const [], Output? currentData, this.lifecycleObserver})
       : super(currentData: currentData) {
+    setIndependenceUp();
     // finalDataStream.listen(super.handleData);
   }
 }

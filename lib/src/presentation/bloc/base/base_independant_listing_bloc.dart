@@ -11,6 +11,7 @@ export 'working_state.dart';
 abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
     extends BaseListingBloc<Output, Filtering> with IndependentMixin<Output> {
   final List<Stream<provider.ProviderState>> sources;
+  final LifecycleObserver? lifecycleObserver;
 
   get source => CombineLatestStream.combine3<ProviderState<Output>, Filtering?,
               String, ProviderState<Output>>(
@@ -20,8 +21,11 @@ abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
   BaseIndependentListingBloc(
       {int searchDelayMillis = 1000,
       this.sources = const [],
-      Output? currentData})
-      : super(currentData: currentData, searchDelayMillis: searchDelayMillis);
+      Output? currentData,
+      this.lifecycleObserver})
+      : super(currentData: currentData, searchDelayMillis: searchDelayMillis) {
+    setIndependenceUp();
+  }
 
   Output Function(Output input) get converter =>
       (output) => applyFilter(output, filter, query);
