@@ -18,17 +18,9 @@ abstract class BaseConverterBloc<Input, Output>
 
   get initialState => LoadingState();
 
-  Stream<provider.ProviderState<Input>>? get source => sourceBloc?.stateStream;
+  late final Stream<provider.ProviderState<Input>> source;
 
   final provider.BaseProviderBloc<Input>? sourceBloc;
-
-  final _eventsSubject =
-      StreamController<provider.ProviderState<Input>>.broadcast();
-  StreamSink<provider.ProviderState<Input>> get eventSink =>
-      _eventsSubject.sink;
-  Stream<provider.ProviderState<Input>> get eventStream =>
-      async.LazyStream(() => _eventsSubject.stream
-          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
   Stream<provider.ProviderState<Output>> get providerStream =>
       async.LazyStream(() => stateStream
@@ -56,21 +48,21 @@ abstract class BaseConverterBloc<Input, Output>
   BaseConverterBloc({Output? currentData, this.sourceBloc})
       : super(currentData) {
     getData();
-    // stream.listen((state) {
-    //   _statesSubject.add(state);
-    // });
     _inputSubscription = inputStream.listen(handleData, onError: (e, s) {
       print(e);
       print(s);
       emit(ErrorState(defaultError));
     });
-    eventSubscription = eventStream.listen(handleEvent, onError: (e, s) {
+    if (sourceBloc != null) {
+      source = sourceBloc!.stateStream;
+    }
+    eventSubscription =
+        source.shareValue().listen(handleEvent, onError: (e, s) {
       print(this);
       print(e);
       print(s);
       emit(ErrorState(defaultError));
     });
-    source?.pipe(eventSink);
   }
 
   void clean() {
@@ -135,10 +127,9 @@ abstract class BaseConverterBloc<Input, Output>
   @override
   Future<void> close() {
     _inputSubscription?.cancel();
-    eventSubscription?.cancel();
+    eventSubscription.cancel();
     _inputSubject.close();
     // _statesSubject.drain().then((value) => _statesSubject.close());
-    _eventsSubject.close();
     return super.close();
   }
 }

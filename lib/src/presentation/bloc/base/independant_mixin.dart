@@ -20,11 +20,14 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
 
   LifecycleObserver? get lifecycleObserver;
 
-  List<Stream<provider.ProviderState>>? get sources;
+  List<Stream<provider.ProviderState>> get sources;
 
   Stream<provider.ProviderState<Output>> get source {
     Stream<provider.ProviderState<Output>> finalStream;
-    final sources = this.sources!;
+    final sources = this.sources;
+    if (sourceBloc != null) {
+      sources.add(sourceBloc!.stateStream);
+    }
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources)
           .asBroadcastStream(onCancel: (sub) => sub.cancel());
