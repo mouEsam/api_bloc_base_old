@@ -11,7 +11,7 @@ export 'working_state.dart';
 
 mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
     implements LifecycleAware {
-  final Duration? refreshInterval = Duration(seconds: 30);
+  final Duration? refreshInterval = const Duration(seconds: 30);
 
   Timer? _retrialTimer;
 

@@ -18,6 +18,5 @@ abstract class BaseUserAwareListingBloc<Output, Filtering extends FilterType>
             sources: sources,
             lifecycleObserver: lifecycleObserver) {
     setUpUserListener();
-    setIndependenceUp();
   }
 }

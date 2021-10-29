@@ -83,7 +83,7 @@ abstract class BaseConverterBloc<Input, Output>
     if (event is provider.ProviderLoadingState<Input>) {
       handleLoadingState(event);
     } else if (event is provider.ProviderLoadedState<Input>) {
-      handleData(event.data);
+      inputSink.add(event.data);
     } else if (event is provider.ProviderErrorState<Input>) {
       handleErrorState(event);
     }

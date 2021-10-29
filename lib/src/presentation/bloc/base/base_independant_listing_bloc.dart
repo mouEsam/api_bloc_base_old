@@ -13,10 +13,10 @@ abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
   final List<Stream<provider.ProviderState>> sources;
   final LifecycleObserver? lifecycleObserver;
 
-  get source => CombineLatestStream.combine3<ProviderState<Output>, Filtering?,
-              String, ProviderState<Output>>(
-          super.source, filterStream, queryStream, (a, b, c) => a)
-      .asBroadcastStream(onCancel: (sub) => sub.cancel());
+  get inputStream =>
+      CombineLatestStream.combine3<Output, Filtering?, String, Output>(
+              super.inputStream, filterStream, queryStream, (a, b, c) => a)
+          .asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   BaseIndependentListingBloc(
       {int searchDelayMillis = 1000,

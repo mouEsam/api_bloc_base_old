@@ -6,8 +6,6 @@ import 'paginated_mixin.dart';
 
 abstract class BasePaginatedBloc<Data> extends BaseIndependentBloc<Data>
     with PaginatedMixin<Data, Data> {
-  get refreshInterval => null;
-
   BasePaginatedBloc({List<Stream<ProviderState>>? sources, Data? currentData})
       : super(currentData: currentData, sources: sources) {
     setIndependenceUp();

@@ -17,6 +17,9 @@ class PaginatedData<T> extends Equatable {
 }
 
 mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
+  // IMPORTANT!
+  Duration? get refreshInterval => null;
+
   int get startPage => 1;
 
   int? _currentPage;

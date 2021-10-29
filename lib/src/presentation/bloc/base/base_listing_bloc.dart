@@ -12,10 +12,10 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
     extends BaseConverterBloc<Output, Output> {
   final int searchDelayMillis;
 
-  get source => CombineLatestStream.combine3<ProviderState<Output>, Filtering?,
-              String, ProviderState<Output>>(
-          super.source!, filterStream, queryStream, (a, b, c) => a)
-      .asBroadcastStream(onCancel: (sub) => sub.cancel());
+  get inputStream =>
+      CombineLatestStream.combine3<Output, Filtering?, String, Output>(
+              super.inputStream, filterStream, queryStream, (a, b, c) => a)
+          .asBroadcastStream(onCancel: (sub) => sub.cancel());
 
   BaseListingBloc(
       {this.searchDelayMillis = 1000,
