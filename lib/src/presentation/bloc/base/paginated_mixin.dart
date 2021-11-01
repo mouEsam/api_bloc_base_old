@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:async/async.dart' as async;
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 
 class PaginatedInput<T> extends Equatable {
   final T input;
@@ -29,8 +30,8 @@ class PaginatedData<T> extends Equatable {
   get props => [this.data, this.isThereMore, this.currentPage];
 }
 
-mixin PaginatedMixin<Input, Output>
-    on BaseConverterBloc<PaginatedInput<Input>, Output> {
+mixin PaginatedMixin<Output>
+    on BaseConverterBloc<PaginatedInput<Output>, Output> {
   // IMPORTANT!
   Duration? get refreshInterval => null;
 
@@ -66,6 +67,7 @@ mixin PaginatedMixin<Input, Output>
   }
 
   @override
+  @mustCallSuper
   void setData(newData) {
     final isThereMore = canGetMore(newData);
     final map = _paginatedData?.data ?? <int, Output>{};

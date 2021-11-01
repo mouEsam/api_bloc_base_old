@@ -23,7 +23,7 @@ abstract class BaseListingBloc<Output, Filtering extends FilterType>
       Output? currentData})
       : super(sourceBloc: sourceBloc, currentData: currentData);
 
-  Output converter(Output output) => applyFilter(output, filter, query);
+  Output convertInput(Output output) => applyFilter(output, filter, query);
 
   Output applyFilter(Output output, Filtering? filter, String query) {
     return output;

@@ -65,7 +65,7 @@ abstract class BaseConverterBloc<Input, Output>
     });
   }
 
-  Output converter(Input input);
+  Output convertInput(Input input);
 
   void clean() {
     // currentData = null;
@@ -96,17 +96,17 @@ abstract class BaseConverterBloc<Input, Output>
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      setData(converter(event));
+      setData(convertOutput(convertInput(event)));
     }
   }
 
-  Output handleOutput(Output output) {
+  Output convertOutput(Output output) {
     return output;
   }
 
   @mustCallSuper
   void setData(Output newData) {
-    currentData = handleOutput(newData);
+    currentData = newData;
     emitLoaded();
   }
 

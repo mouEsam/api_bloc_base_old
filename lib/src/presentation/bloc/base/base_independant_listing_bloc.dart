@@ -28,5 +28,5 @@ abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
     setIndependenceUp();
   }
 
-  Output converter(Output output) => applyFilter(output, filter, query);
+  Output convertInput(Output output) => applyFilter(output, filter, query);
 }

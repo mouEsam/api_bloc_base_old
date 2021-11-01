@@ -21,5 +21,5 @@ abstract class BaseUserAwareListingBloc<Output, Filtering extends FilterType>
   }
 
   @override
-  Output converter(Output output) => output;
+  Output convertInput(Output output) => output;
 }

@@ -6,7 +6,7 @@ import 'paginated_mixin.dart';
 
 abstract class BasePaginatedBloc<Data>
     extends BaseIndependentBloc<PaginatedInput<Data>, Data>
-    with PaginatedMixin<Data, Data> {
+    with PaginatedMixin<Data> {
   BasePaginatedBloc(
       {List<Stream<ProviderState>> sources = const [], Data? currentData})
       : super(currentData: currentData, sources: sources) {
