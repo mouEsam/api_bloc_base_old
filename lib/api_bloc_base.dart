@@ -22,6 +22,7 @@ export 'src/data/source/remote/base_rest_client.dart';
 export 'src/domain/entity/base_profile.dart';
 export 'src/domain/entity/entity.dart';
 export 'src/domain/entity/localized_string.dart';
+export 'src/domain/entity/paginated_input.dart';
 export 'src/domain/entity/response_entity.dart';
 export 'src/presentation/bloc/base/base_converter_bloc.dart';
 export 'src/presentation/bloc/base/base_independant_bloc.dart';
