@@ -6,7 +6,7 @@ import 'user_dependant_mixin.dart';
 
 abstract class BaseUserAwareListingBloc<Output, Filtering extends FilterType>
     extends BaseIndependentListingBloc<Output, Filtering>
-    with UserDependantMixin<Output> {
+    with UserDependantMixin<Output, Output> {
   final BaseUserBloc userBloc;
 
   BaseUserAwareListingBloc(this.userBloc,
@@ -19,4 +19,7 @@ abstract class BaseUserAwareListingBloc<Output, Filtering extends FilterType>
             lifecycleObserver: lifecycleObserver) {
     setUpUserListener();
   }
+
+  @override
+  Output converter(Output output) => output;
 }

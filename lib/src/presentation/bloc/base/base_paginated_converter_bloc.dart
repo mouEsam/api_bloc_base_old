@@ -3,9 +3,10 @@ import 'base_converter_bloc.dart';
 import 'paginated_mixin.dart';
 
 abstract class BasePaginatedConverterBloc<Input, Output>
-    extends BaseConverterBloc<Input, Output>
+    extends BaseConverterBloc<PaginatedInput<Input>, Output>
     with PaginatedMixin<Input, Output> {
   BasePaginatedConverterBloc(
-      {BaseProviderBloc<Input>? sourceBloc, Output? currentData})
+      {BaseProviderBloc<PaginatedInput<Input>>? sourceBloc,
+      Output? currentData})
       : super(currentData: currentData, sourceBloc: sourceBloc);
 }

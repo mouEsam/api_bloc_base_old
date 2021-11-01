@@ -4,7 +4,7 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independant_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
-mixin UserDependantMixin<Data> on IndependentMixin<Data> {
+mixin UserDependantMixin<Input, Data> on IndependentMixin<Input, Data> {
   BaseUserBloc get userBloc;
   String? authToken;
   get userId => userBloc.currentUser?.id;

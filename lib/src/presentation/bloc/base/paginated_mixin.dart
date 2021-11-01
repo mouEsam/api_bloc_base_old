@@ -5,51 +5,80 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:async/async.dart' as async;
 import 'package:equatable/equatable.dart';
 
+class PaginatedInput<T> extends Equatable {
+  final T input;
+  final String? nextUrl;
+  final int currentPage;
+
+  const PaginatedInput(this.input, this.nextUrl, this.currentPage);
+
+  @override
+  get props => [this.input, this.nextUrl, this.currentPage];
+}
+
 class PaginatedData<T> extends Equatable {
   final Map<int, T> data;
   final bool isThereMore;
   final int currentPage;
+  final String? nextPage;
 
-  const PaginatedData(this.data, this.isThereMore, this.currentPage);
+  const PaginatedData(
+      this.data, this.isThereMore, this.currentPage, this.nextPage);
 
   @override
   get props => [this.data, this.isThereMore, this.currentPage];
 }
 
-mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
+mixin PaginatedMixin<Input, Output>
+    on BaseConverterBloc<PaginatedInput<Input>, Output> {
   // IMPORTANT!
   Duration? get refreshInterval => null;
 
   int get startPage => 1;
 
+  String? nextPage;
+
   int? _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
   int get lastPage =>
-      paginatedData?.data.keys.fold(
+      _paginatedData?.data.keys.fold(
           0, ((previousValue, element) => max(previousValue!, element))) ??
       2;
 
   bool get canGoBack => currentPage > startPage;
   bool get canGoForward => currentPage < lastPage || isThereMore;
-  bool get isThereMore => paginatedData?.isThereMore ?? true;
+  bool get isThereMore => _paginatedData?.isThereMore ?? true;
 
-  PaginatedData<Output>? paginatedData;
+  PaginatedData<Output> get paginatedData => _paginatedData!;
+
+  PaginatedData<Output>? _paginatedData;
+
   Stream<PaginatedData<Output>?> get paginatedStream => async.LazyStream(
-      () => stateStream.map((event) => paginatedData).distinct());
+      () => stateStream.map((event) => _paginatedData).distinct());
+
+  @override
+  void handleInput(event) {
+    if (currentPage == event.currentPage) {
+      nextPage = event.nextUrl;
+    }
+    super.handleInput(event);
+  }
 
   @override
   void setData(newData) {
     final isThereMore = canGetMore(newData);
-    final map = paginatedData?.data ?? <int, Output>{};
+    final map = _paginatedData?.data ?? <int, Output>{};
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
-    paginatedData = PaginatedData(newMap, isThereMore, currentPage);
+    _paginatedData = PaginatedData(newMap, isThereMore, currentPage, nextPage);
     super.setData(newData);
   }
 
-  bool canGetMore(newData) {
-    if (newData == null) {
+  bool canGetMore(Output newData) {
+    if (nextPage == null) {
+      return false;
+    } else if (newData == null) {
       return false;
     } else if (newData is Iterable) {
       return newData.isNotEmpty;
@@ -65,45 +94,42 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
     }
   }
 
-  Future<Output?> next() async {
+  Future<void> next() async {
     if (canGoForward) {
-      _currentPage = _currentPage! + 1;
-      final nextData = paginatedData?.data[_currentPage!];
+      _currentPage = currentPage + 1;
+      final nextData = _paginatedData?.data[_currentPage!];
       if (nextData != null) {
         setData(nextData);
         emitLoaded();
-        return nextData;
       }
       return super.getData();
     }
-    return currentData;
   }
 
-  Future<Output?> back() async {
+  Future<void> back() async {
     if (canGoBack) {
       _currentPage = _currentPage! - 1;
-      final previousData = paginatedData!.data[_currentPage!]!;
+      final previousData = _paginatedData!.data[_currentPage!]!;
       setData(previousData);
       emitLoaded();
-      return previousData;
     }
-    return currentData;
   }
 
   void clean() {
     super.clean();
     _currentPage = startPage;
-    paginatedData = null;
+    _paginatedData = null;
+    nextPage = null;
   }
 
   @override
-  Future<Output?> reset() {
+  Future<void> reset() {
     clean();
     return super.reset();
   }
 
   @override
-  Future<Output?> refresh() {
+  Future<void> refresh() {
     clean();
     return super.refresh();
   }
@@ -133,7 +159,7 @@ mixin PaginatedMixin<Input, Output> on BaseConverterBloc<Input, Output> {
 
   @override
   void emitLoaded() {
-    emit(PaginatedLoadedState(paginatedData, currentData));
+    emit(PaginatedLoadedState(_paginatedData, currentData));
   }
 
   @override

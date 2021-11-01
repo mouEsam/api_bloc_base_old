@@ -7,8 +7,9 @@ import 'independant_mixin.dart';
 
 export 'working_state.dart';
 
-abstract class BaseIndependentBloc<Output>
-    extends BaseConverterBloc<Output, Output> with IndependentMixin<Output> {
+abstract class BaseIndependentBloc<Input, Output>
+    extends BaseConverterBloc<Input, Output>
+    with IndependentMixin<Input, Output> {
   final List<Stream<provider.ProviderState>> sources;
   final LifecycleObserver? lifecycleObserver;
 

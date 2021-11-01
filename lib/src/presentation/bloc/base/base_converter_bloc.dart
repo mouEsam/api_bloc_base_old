@@ -48,7 +48,7 @@ abstract class BaseConverterBloc<Input, Output>
   BaseConverterBloc({Output? currentData, this.sourceBloc})
       : super(currentData) {
     getData();
-    _inputSubscription = inputStream.listen(handleData, onError: (e, s) {
+    _inputSubscription = inputStream.listen(handleInput, onError: (e, s) {
       print(e);
       print(s);
       emit(ErrorState(defaultError));
@@ -65,11 +65,11 @@ abstract class BaseConverterBloc<Input, Output>
     });
   }
 
+  Output converter(Input input);
+
   void clean() {
     // currentData = null;
   }
-
-  Output Function(Input input)? get converter => null;
 
   void handleEvent(provider.ProviderState event) {
     if (event is provider.ProviderLoadingState<Input>) {
@@ -92,34 +92,38 @@ abstract class BaseConverterBloc<Input, Output>
   }
 
   @mustCallSuper
-  void handleData(Input event) {
+  void handleInput(Input event) {
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      setData(converter!(event));
+      setData(converter(event));
     }
+  }
+
+  Output handleOutput(Output output) {
+    return output;
   }
 
   @mustCallSuper
   void setData(Output newData) {
-    currentData = newData;
+    currentData = handleOutput(newData);
     emitLoaded();
   }
 
   @mustCallSuper
-  Future<Output?> getData([bool refresh = false]) async {
+  Future<void> getData([bool refresh = false]) async {
     if (!refresh) emitLoading();
     return null;
   }
 
-  Future<Output?> reset() async {
+  Future<void> reset() async {
     //currentData = null;
     wasInitialized = false;
     return getData();
   }
 
   @mustCallSuper
-  Future<Output?> refresh() async {
+  Future<void> refresh() async {
     sourceBloc?.refresh();
     return getData(true);
   }

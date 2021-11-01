@@ -2,8 +2,9 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 
 import 'user_dependant_mixin.dart';
 
-abstract class BaseUserAwareBloc<Output> extends BaseIndependentBloc<Output>
-    with UserDependantMixin<Output> {
+abstract class BaseUserAwareBloc<Input, Output>
+    extends BaseIndependentBloc<Input, Output>
+    with UserDependantMixin<Input, Output> {
   final BaseUserBloc userBloc;
 
   BaseUserAwareBloc(this.userBloc,

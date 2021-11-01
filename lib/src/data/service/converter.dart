@@ -34,21 +34,21 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X> {
     return result;
   }
 
-  bool isError(BaseApiResponse? initialData) {
+  bool isError(T? initialData) {
     return initialData?.errors != null ||
         initialData?.error != null ||
         initialData?.message != null;
   }
 
-  bool isSuccess(BaseApiResponse initialData) {
+  bool isSuccess(T initialData) {
     return initialData.success != null;
   }
 
-  bool hasData(BaseApiResponse initialData) {
+  bool hasData(T initialData) {
     return !isError(initialData) && !isSuccess(initialData);
   }
 
-  ResponseEntity? response(BaseApiResponse initialData) {
+  ResponseEntity? response(T initialData) {
     if (isError(initialData)) {
       return Failure(
           initialData!.message ?? initialData.error ?? defaultErrorMessage,

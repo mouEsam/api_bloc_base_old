@@ -9,7 +9,8 @@ import '../base_provider/provider_state.dart' as provider;
 export 'working_state.dart';
 
 abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
-    extends BaseListingBloc<Output, Filtering> with IndependentMixin<Output> {
+    extends BaseListingBloc<Output, Filtering>
+    with IndependentMixin<Output, Output> {
   final List<Stream<provider.ProviderState>> sources;
   final LifecycleObserver? lifecycleObserver;
 
@@ -27,6 +28,5 @@ abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
     setIndependenceUp();
   }
 
-  Output Function(Output input) get converter =>
-      (output) => applyFilter(output, filter, query);
+  Output converter(Output output) => applyFilter(output, filter, query);
 }

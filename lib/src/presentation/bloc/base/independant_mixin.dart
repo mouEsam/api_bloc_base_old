@@ -9,7 +9,7 @@ import 'base_converter_bloc.dart';
 
 export 'working_state.dart';
 
-mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
+mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
     implements LifecycleAware {
   final Duration? refreshInterval = const Duration(seconds: 30);
 
@@ -22,8 +22,8 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
 
   List<Stream<provider.ProviderState>> get sources;
 
-  Stream<provider.ProviderState<Output>> get source {
-    Stream<provider.ProviderState<Output>> finalStream;
+  Stream<provider.ProviderState<Input>> get source {
+    Stream<provider.ProviderState<Input>> finalStream;
     final sources = this.sources;
     if (sourceBloc != null) {
       sources.add(sourceBloc!.stateStream);
@@ -31,33 +31,33 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
     if (sources.isNotEmpty) {
       final stream = CombineLatestStream.list(sources)
           .asBroadcastStream(onCancel: (sub) => sub.cancel());
-      finalStream = CombineLatestStream.combine2<List, Output,
-              provider.ProviderState<Output>>(stream, originalDataStream,
+      finalStream = CombineLatestStream.combine2<List, Input,
+              provider.ProviderState<Input>>(stream, originalDataStream,
           (list, data) {
         provider.ProviderErrorState? error = list.firstWhere(
             (element) => element is provider.ProviderErrorState,
             orElse: () => null);
         if (error != null) {
-          return provider.ProviderErrorState<Output>(error.message);
+          return provider.ProviderErrorState<Input>(error.message);
         }
         provider.ProviderLoadingState? loading = list.firstWhere(
             (element) => element is provider.ProviderLoadingState,
             orElse: () => null);
         if (loading != null) {
-          return provider.ProviderLoadingState<Output>();
+          return provider.ProviderLoadingState<Input>();
         }
         provider.InvalidatedState? invalidated = list.firstWhere(
             (element) => element is provider.InvalidatedState,
             orElse: () => null);
         if (invalidated != null) {
-          return provider.InvalidatedState<Output>();
+          return provider.InvalidatedState<Input>();
         }
-        return provider.ProviderLoadedState<Output>(data);
+        return provider.ProviderLoadedState<Input>(data);
       }).asBroadcastStream(onCancel: (sub) => sub.cancel());
     } else {
       finalStream = originalDataStream
-          .map((data) => provider.ProviderLoadedState<Output>(data))
-          .cast<provider.ProviderState<Output>>()
+          .map((data) => provider.ProviderLoadedState<Input>(data))
+          .cast<provider.ProviderState<Input>>()
           .asBroadcastStream(onCancel: (sub) => sub.cancel());
     }
     return finalStream;
@@ -89,44 +89,40 @@ mixin IndependentMixin<Output> on BaseConverterBloc<Output, Output>
     super.setData(data);
   }
 
-  final _ownDataSubject = StreamController<Output>.broadcast();
-  Stream<Output> get originalDataStream => _ownDataSubject.stream;
+  final _ownDataSubject = StreamController<Input>.broadcast();
+  Stream<Input> get originalDataStream => _ownDataSubject.stream;
 
   final BehaviorSubject<Output> _finalDataSubject = BehaviorSubject<Output>();
   Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
-
-  Output Function(Output input) get converter => (data) => data;
 
   void clean() {
     super.clean();
     //_finalDataSubject.value = null;
   }
 
-  Result<Either<ResponseEntity, Output>> get dataSource;
+  Result<Either<ResponseEntity, Input>> get dataSource;
 
-  Future<Output?> getData([bool refresh = false]) async {
+  Future<void> getData([bool refresh = false]) async {
     if (green && shouldBeGreen) {
       super.getData(refresh);
       final data = dataSource;
-      return handleDataRequest(data, refresh);
+      await handleDataRequest(data, refresh);
     }
     return null;
   }
 
-  Future<Output?> handleDataRequest(
-      Result<Either<ResponseEntity, Output>> result, bool refresh) async {
+  Future<void> handleDataRequest(
+      Result<Either<ResponseEntity, Input>> result, bool refresh) async {
     if (!refresh) emitLoading();
     final future = await result.resultFuture;
-    return future.fold<Output?>(
+    return future.fold(
       (l) {
         handleEvent(ProviderErrorState<Output>(l.message));
-        return null;
       },
       (r) {
         if (!_ownDataSubject.isClosed) {
           _ownDataSubject.add(r);
         }
-        return r;
       },
     );
   }
