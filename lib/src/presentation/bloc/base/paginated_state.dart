@@ -3,12 +3,12 @@ import 'package:api_bloc_base/api_bloc_base.dart';
 import 'working_state.dart';
 
 abstract class PaginatedState<T> {
-  PaginatedData<T>? get paginatedData;
+  PaginatedOutput<T>? get paginatedData;
 }
 
 class PaginatedLoadedState<T> extends LoadedState<T>
     implements PaginatedState<T> {
-  final PaginatedData<T>? paginatedData;
+  final PaginatedOutput<T>? paginatedData;
 
   const PaginatedLoadedState(this.paginatedData, T data) : super(data);
 }

@@ -6,7 +6,7 @@ import 'package:async/async.dart' as async;
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 
-class PaginatedInput<T> extends Equatable {
+abstract class PaginatedInput<T> extends Equatable {
   final T input;
   final String? nextUrl;
   final int currentPage;
@@ -17,48 +17,47 @@ class PaginatedInput<T> extends Equatable {
   get props => [this.input, this.nextUrl, this.currentPage];
 }
 
-class PaginatedData<T> extends Equatable {
+class PaginatedOutput<T> extends Equatable {
   final Map<int, T> data;
   final bool isThereMore;
   final int currentPage;
   final String? nextPage;
 
-  const PaginatedData(
+  const PaginatedOutput(
       this.data, this.isThereMore, this.currentPage, this.nextPage);
 
   @override
   get props => [this.data, this.isThereMore, this.currentPage];
 }
 
-mixin PaginatedMixin<Output>
-    on BaseConverterBloc<PaginatedInput<Output>, Output> {
+mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
+    on BaseConverterBloc<Paginated, Output> {
+  static const int startPage = 1;
+
   // IMPORTANT!
   Duration? get refreshInterval => null;
 
-  int get startPage => 1;
+  PaginatedOutput<Output> get empty =>
+      const PaginatedOutput({}, true, startPage, null);
 
   String? nextPage;
-
   int? _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
-  int get lastPage =>
-      _paginatedData?.data.keys.fold(
-          0, ((previousValue, element) => max(previousValue!, element))) ??
-      2;
+  int get lastPage => paginatedData.data.keys.fold(
+      startPage, ((previousValue, element) => max(previousValue, element)));
 
   bool get canGoBack => currentPage > startPage;
   bool get canGoForward => currentPage < lastPage || isThereMore;
-  bool get isThereMore => _paginatedData?.isThereMore ?? true;
+  bool get isThereMore => paginatedData.isThereMore;
 
-  PaginatedData<Output> get paginatedData => _paginatedData!;
+  late PaginatedOutput<Output> paginatedData = empty;
 
-  PaginatedData<Output>? _paginatedData;
-
-  Stream<PaginatedData<Output>?> get paginatedStream => async.LazyStream(
-      () => stateStream.map((event) => _paginatedData).distinct());
+  Stream<PaginatedOutput<Output>?> get paginatedStream => async.LazyStream(
+      () => stateStream.map((event) => paginatedData).distinct());
 
   @override
+  @mustCallSuper
   void handleInput(event) {
     if (currentPage == event.currentPage) {
       nextPage = event.nextUrl;
@@ -70,10 +69,10 @@ mixin PaginatedMixin<Output>
   @mustCallSuper
   void setData(newData) {
     final isThereMore = canGetMore(newData);
-    final map = _paginatedData?.data ?? <int, Output>{};
+    final map = paginatedData.data;
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
-    _paginatedData = PaginatedData(newMap, isThereMore, currentPage, nextPage);
+    paginatedData = PaginatedOutput(newMap, isThereMore, currentPage, nextPage);
     super.setData(newData);
   }
 
@@ -99,7 +98,7 @@ mixin PaginatedMixin<Output>
   Future<void> next() async {
     if (canGoForward) {
       _currentPage = currentPage + 1;
-      final nextData = _paginatedData?.data[_currentPage!];
+      final nextData = paginatedData.data[_currentPage!];
       if (nextData != null) {
         setData(nextData);
         emitLoaded();
@@ -111,7 +110,7 @@ mixin PaginatedMixin<Output>
   Future<void> back() async {
     if (canGoBack) {
       _currentPage = _currentPage! - 1;
-      final previousData = _paginatedData!.data[_currentPage!]!;
+      final previousData = paginatedData.data[_currentPage!]!;
       setData(previousData);
       emitLoaded();
     }
@@ -120,7 +119,7 @@ mixin PaginatedMixin<Output>
   void clean() {
     super.clean();
     _currentPage = startPage;
-    _paginatedData = null;
+    paginatedData = empty;
     nextPage = null;
   }
 
@@ -161,7 +160,7 @@ mixin PaginatedMixin<Output>
 
   @override
   void emitLoaded() {
-    emit(PaginatedLoadedState(_paginatedData, currentData));
+    emit(PaginatedLoadedState(paginatedData, currentData));
   }
 
   @override
