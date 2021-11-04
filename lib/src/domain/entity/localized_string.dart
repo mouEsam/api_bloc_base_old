@@ -1,6 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'localized_string.g.dart';
+
+@JsonSerializable()
 class LocalizedString extends Equatable {
   final String defaultLang;
   final Map<String, String> data;
@@ -64,4 +68,8 @@ class LocalizedString extends Equatable {
 
   @override
   List<Object?> get props => [data, defaultLang];
+
+  factory LocalizedString.fromJson(Map<String, dynamic> json) =>
+      _$LocalizedStringFromJson(json);
+  Map<String, dynamic> toJson() => _$LocalizedStringToJson(this);
 }

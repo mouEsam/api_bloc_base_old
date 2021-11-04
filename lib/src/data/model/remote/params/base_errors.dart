@@ -6,7 +6,7 @@ part 'base_errors.g.dart';
 class BaseErrors {
   const BaseErrors();
 
-  factory BaseErrors.fromJson(Map<String, dynamic>? json) =>
+  factory BaseErrors.fromJson(Map<String, dynamic> json) =>
       _$BaseErrorsFromJson(json);
   Map<String, dynamic> toJson() => _$BaseErrorsToJson(this);
 }

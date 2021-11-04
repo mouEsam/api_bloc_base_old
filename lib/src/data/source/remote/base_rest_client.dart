@@ -97,6 +97,7 @@ class BaseRestClient {
     String? authorizationToken,
     Params? params,
     String? subDomain,
+    bool pathIsUrl = false,
     dynamic acceptedLanguage,
     CacheOptions? options,
     ResponseType responseType = ResponseType.json,
@@ -195,6 +196,10 @@ class BaseRestClient {
       final newHost = splitHost.join('.');
       baseUri = baseUri.replace(host: newHost);
       newBaseUrl = baseUri.toString();
+    }
+    if (pathIsUrl) {
+      // Unnecessary but why not 🤷‍
+      newBaseUrl = "";
     }
     Future<Response> result;
     if (mockedResult == null) {

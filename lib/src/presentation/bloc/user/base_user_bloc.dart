@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
+import 'package:api_bloc_base/src/domain/entity/credentials.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base_provider/provider_state.dart'
@@ -88,7 +88,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     }
   }
 
-  Result<Either<ResponseEntity, T>> login(BaseAuthParams params);
+  Result<Either<ResponseEntity, T>> login(Credentials params);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 

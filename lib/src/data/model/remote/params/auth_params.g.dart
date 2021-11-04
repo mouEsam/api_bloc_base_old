@@ -7,4 +7,6 @@ part of 'auth_params.dart';
 // **************************************************************************
 
 Map<String, dynamic> _$BaseAuthParamsToJson(BaseAuthParams instance) =>
-    <String, dynamic>{};
+    <String, dynamic>{
+      'remember_me': instance.rememberMe,
+    };

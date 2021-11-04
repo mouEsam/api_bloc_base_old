@@ -19,7 +19,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     return handleFullResponse<BaseUserResponse, T>(
       result,
       interceptResult: (result) {
-        if (result.active == true) {
+        if (result.active == true && params.rememberMe) {
           userDefaults.setSignedAccount(result);
           userDefaults.setUserToken(result.accessToken);
         }

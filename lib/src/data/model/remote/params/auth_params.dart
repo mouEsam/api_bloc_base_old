@@ -5,7 +5,9 @@ part 'auth_params.g.dart';
 
 @JsonSerializable(createFactory: false)
 class BaseAuthParams extends Params {
-  const BaseAuthParams();
+  final bool rememberMe;
+
+  const BaseAuthParams(this.rememberMe);
 
   Map<String, dynamic> toMap() => _$BaseAuthParamsToJson(this);
 }

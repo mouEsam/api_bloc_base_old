@@ -10,5 +10,5 @@ class DummyConverter extends BaseResponseConverter<BaseApiResponse, dynamic> {
   }
 
   @override
-  List<BaseModelConverter> get converters => throw UnimplementedError();
+  get converters => throw UnimplementedError();
 }

@@ -2,26 +2,28 @@ import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.d
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 
-abstract class BaseResponseConverter<T extends BaseApiResponse, X> {
-  final String Function(String)? handlePath;
-
-  const BaseResponseConverter([this.handlePath]);
-
-  String get defaultErrorMessage => 'Error';
-
-  List<BaseModelConverter> get converters;
-
-  BaseModelConverter? getConverter(Type inputType, Type outputType) {
-    print("$inputType $outputType");
-    print(converters.map((e) => "${e.inputType} ${e.outputType}"));
+abstract class Converter<IN, OUT> {
+  const Converter();
+  Type get inputType => IN;
+  Type get outputType => OUT;
+  bool acceptsInput(Type input) => input == inputType;
+  bool returnsOutput(Type output) => output == outputType;
+  List<Converter> get converters;
+  OUT? convert(IN initialData);
+  Converter? getConverter(Type inputType, Type outputType) {
     final converter = converters.firstWhereOrNull((element) =>
         element.acceptsInput(inputType) && element.returnsOutput(outputType));
     return converter;
   }
 
-  X resolveConverter<I, X>(I? input) {
-    final converter = getConverter(I, X)!;
-    return converter.convert(input);
+  X requireConverter<I, X>(I? input) {
+    return resolveConverter(input)!;
+  }
+
+  X? resolveConverter<I, X>(I? input) {
+    if (input == null) return null;
+    final converter = getConverter(I, X);
+    return converter?.convert(input);
   }
 
   List<X> resolveListConverter<X, Y>(List<Y>? input) {
@@ -33,47 +35,51 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X> {
         <X>[];
     return result;
   }
+}
 
-  bool isError(T? initialData) {
-    return initialData?.errors != null ||
-        initialData?.error != null ||
-        initialData?.message != null;
+abstract class BaseResponseConverter<T extends BaseApiResponse, X>
+    extends Converter<T, X> {
+  final String Function(String)? handlePath;
+
+  const BaseResponseConverter([this.handlePath]);
+
+  String get defaultErrorMessage => 'Error';
+
+  X convert(T initialData);
+
+  bool isErrorMessage(T? initialData) {
+    return initialData?.errors != null || initialData?.error != null;
   }
 
-  bool isSuccess(T initialData) {
-    return initialData.success != null;
+  bool isSuccessMessage(T initialData) {
+    return initialData.success is String;
   }
 
   bool hasData(T initialData) {
-    return !isError(initialData) && !isSuccess(initialData);
+    return initialData.data != null ||
+        (initialData.success == true && initialData.message == null) ||
+        (!isErrorMessage(initialData) && !isSuccessMessage(initialData));
   }
 
   ResponseEntity? response(T initialData) {
-    if (isError(initialData)) {
+    if (isErrorMessage(initialData)) {
       return Failure(
-          initialData!.message ?? initialData.error ?? defaultErrorMessage,
+          initialData.message ?? initialData.error ?? defaultErrorMessage,
           initialData.errors);
-    } else if (isSuccess(initialData)) {
-      return Success(initialData.success);
+    } else if (isSuccessMessage(initialData)) {
+      return Success(initialData.message ?? initialData.success);
     }
     return null;
   }
-
-  X convert(T initialData);
 }
 
-abstract class BaseModelConverter<Input, Output> {
+abstract class BaseModelConverter<Input, Output>
+    extends Converter<Input, Output> {
   final bool failIfError;
 
   const BaseModelConverter([this.failIfError = false]);
 
-  Type get inputType => Input;
-  Type get outputType => Output;
-
-  bool acceptsInput(Type input) => input == inputType;
-  bool returnsOutput(Type output) => output == outputType;
-
-  Output? convert(Input initialData);
+  List<Converter> get converters => [];
 
   Output? convertSingle(Input? initialData) {
     Output? result;
