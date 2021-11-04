@@ -13,13 +13,14 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
   get stream => super.stream.distinct();
 
   List<Stream> get eventsStreams;
-  Map<NavigationState, void Function(BuildContext)> get actions;
+  Map<Type, void Function(BuildContext, NavigationState)> get actions;
 
   BaseNavigatorBloc(NavigationState initialState) : super(initialState) {
     final combinedStream =
         CombineLatestStream(eventsStreams, generateNavigationState);
     final initialized = ensureInitialized()
         .asStream()
+        .doOnData(onKeyInitialized)
         .asBroadcastStream(onCancel: (c) => c.cancel());
     _sub = initialized
         .switchMap((value) => combinedStream)
@@ -28,26 +29,39 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
     initialized.switchMap((value) => this.stream).listen(_handleState);
   }
 
-  Future<void> ensureInitialized() async {
+  Future<void> onKeyInitialized(GlobalKey<NavigatorState> navKey) async {}
+
+  Future<GlobalKey<NavigatorState>> ensureInitialized() async {
+    if (navKey.currentContext != null) {
+      return navKey;
+    }
     await Future.doWhile(() async {
       await Future.delayed(Duration(microseconds: 1000), () {});
       return navKey.currentContext == null;
     });
-    return;
+    return navKey;
   }
 
   void _handleState(NavigationState event) {
     print("NavigationState ${event.runtimeType}");
-    final operation = actions[event];
+    final type = event.runtimeType;
+    final operation = actions[type];
     if (operation != null) {
-      operation(navKey.currentContext!);
+      operation(navKey.currentContext!, event);
     }
   }
 
-  Future pushDestructively(BuildContext context, String routeName) async {
-    final result = await Navigator.pushNamedAndRemoveUntil(
-        context, routeName, (r) => false);
-    return result;
+  Future<T?> pushDestructively<T>(String routeName) async {
+    final key = await ensureInitialized();
+    final result = await key.currentState!
+        .pushNamedAndRemoveUntil(routeName, (r) => false);
+    return result as T?;
+  }
+
+  Future<T?> push<T>(String routeName) async {
+    final key = await ensureInitialized();
+    final result = await key.currentState!.pushNamed(routeName);
+    return result as T?;
   }
 
   NavigationState? generateNavigationState(List events);
@@ -59,7 +73,8 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState> {
   }
 }
 
-abstract class NavigationState extends Equatable {
+abstract class NavigationState extends Equatable implements Type {
+  const NavigationState();
   @override
   get stringify => true;
   @override
