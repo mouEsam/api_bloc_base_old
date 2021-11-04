@@ -43,8 +43,6 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
 
   const BaseResponseConverter([this.handlePath]);
 
-  String get defaultErrorMessage => 'Error';
-
   X convert(T initialData);
 
   bool isErrorMessage(T? initialData) {
@@ -52,22 +50,22 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
   }
 
   bool isSuccessMessage(T initialData) {
-    return initialData.success is String;
+    return initialData.success == true || initialData.success is String;
   }
 
   bool hasData(T initialData) {
     return initialData.data != null ||
-        (initialData.success == true && initialData.message == null) ||
-        (!isErrorMessage(initialData) && !isSuccessMessage(initialData));
+        (initialData.success == true && !isErrorMessage(initialData)) ||
+        (!isSuccessMessage(initialData) && !isErrorMessage(initialData));
   }
 
   ResponseEntity? response(T initialData) {
-    if (isErrorMessage(initialData)) {
+    if (isSuccessMessage(initialData)) {
+      return Success(initialData.message ??
+          (initialData.success is String ? initialData.success : null));
+    } else if (isErrorMessage(initialData)) {
       return Failure(
-          initialData.message ?? initialData.error ?? defaultErrorMessage,
-          initialData.errors);
-    } else if (isSuccessMessage(initialData)) {
-      return Success(initialData.message ?? initialData.success);
+          initialData.message ?? initialData.error, initialData.errors);
     }
     return null;
   }
