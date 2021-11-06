@@ -10,6 +10,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   const BaseAuthRepository(this.converter, this.userDefaults);
 
   String get noAccountSavedInError;
+  BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
 
   RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
   RequestResult<BaseUserResponse> refresh(T account);
@@ -34,7 +35,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         .then<Either<ResponseEntity, T>>((account) {
       if (account is T) {
         final operation = refresh(account);
-        final result = handleFullResponse<BaseUserResponse, T>(operation);
+        final result = handleFullResponse<BaseUserResponse, T>(operation, converter: refreshConverter);
         return result.resultFuture.then((value) {
           value.forEach((r) {
             if (r.active == true) {

@@ -40,6 +40,7 @@ export 'src/presentation/bloc/base/paginated_state.dart';
 export 'src/presentation/bloc/base/same_input_output_mixin.dart';
 export 'src/presentation/bloc/base/user_dependant_mixin.dart';
 export 'src/presentation/bloc/base/working_state.dart';
+export 'src/presentation/bloc/base_provider/base_navigator_bloc.dart';
 export 'src/presentation/bloc/base_provider/base_provider_bloc.dart';
 export 'src/presentation/bloc/base_provider/lifecycle_observer.dart';
 export 'src/presentation/bloc/base_provider/provider_state.dart';
