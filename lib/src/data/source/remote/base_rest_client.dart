@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params/params.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/query_params.dart';
 import 'package:api_bloc_base/src/data/model/remote/params/upload_file.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
@@ -102,9 +103,9 @@ class BaseRestClient {
     CacheOptions? options,
     ResponseType responseType = ResponseType.json,
     CachePolicy? cachePolicy,
+    QueryParams? queryParams,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
-    Map<String, dynamic>? queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
     T Function(dynamic)? fromJson,
   }) {
@@ -124,8 +125,14 @@ class BaseRestClient {
           cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
     }
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
-    queryParameters ??= <String, dynamic>{};
+    final queryParameters =
+        queryParams?.getQueryParams() ?? <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
+    queryParameters.forEach((key, value) {
+      if (value is List) {
+        value.removeWhere((element) => element == null);
+      }
+    });
     headers ??= <String, dynamic>{};
     if (acceptedLanguage is Locale) {
       headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;

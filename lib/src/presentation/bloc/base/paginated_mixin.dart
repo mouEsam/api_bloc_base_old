@@ -40,7 +40,8 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
   PaginatedOutput<Output> get empty =>
       const PaginatedOutput({}, true, startPage, null);
 
-  String? _nextPage;
+  Paginated? lastInput;
+
   int? _currentPage;
 
   int get currentPage => _currentPage ?? startPage;
@@ -60,7 +61,7 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
   @mustCallSuper
   void handleInput(event) {
     if (currentPage == event.currentPage) {
-      _nextPage = event.nextUrl;
+      lastInput = event;
     }
     super.handleInput(event);
   }
@@ -72,12 +73,12 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
     final map = paginatedData.data;
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
-    paginatedData = PaginatedOutput(newMap, isThereMore, currentPage, _nextPage);
+    paginatedData = PaginatedOutput(newMap, isThereMore, currentPage, lastInput?.nextUrl);
     super.setData(newData);
   }
 
   bool canGetMore(Output newData) {
-    if (_nextPage == null) {
+    if (lastInput?.nextUrl == null) {
       return false;
     } else if (newData == null) {
       return false;
@@ -120,7 +121,7 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
     super.clean();
     _currentPage = startPage;
     paginatedData = empty;
-    _nextPage = null;
+    lastInput = null;
   }
 
   @override

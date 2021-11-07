@@ -10,6 +10,7 @@ export 'package:sembast/timestamp.dart';
 export 'src/data/model/remote/params/auth_params.dart';
 export 'src/data/model/remote/params/base_errors.dart';
 export 'src/data/model/remote/params/params.dart';
+export 'src/data/model/remote/params/query_params.dart';
 export 'src/data/model/remote/response/base_api_response.dart';
 export 'src/data/model/remote/response/base_user_response.dart';
 export 'src/data/repository/auth_repository.dart';
