@@ -7,8 +7,15 @@ part of 'base_errors.dart';
 // **************************************************************************
 
 BaseErrors _$BaseErrorsFromJson(Map<String, dynamic> json) {
-  return BaseErrors();
+  return BaseErrors(
+    (json['errors'] as Map<String, dynamic>).map(
+      (k, e) =>
+          MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
+    ),
+  );
 }
 
 Map<String, dynamic> _$BaseErrorsToJson(BaseErrors instance) =>
-    <String, dynamic>{};
+    <String, dynamic>{
+      'errors': instance.errors,
+    };

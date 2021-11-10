@@ -23,10 +23,4 @@ abstract class BaseCubit<State> extends Cubit<State> {
     });
     return super.close();
   }
-
-  @override
-  void emit(State state) {
-    print("$runtimeType ${this.state == state} emitting ${state.runtimeType}");
-    super.emit(state);
-  }
 }

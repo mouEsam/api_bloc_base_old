@@ -86,6 +86,16 @@ class FailedOperationState<T> extends LoadedState<T> implements Operation {
       : failure = Failure(errorMessage, errors),
         super(data);
 
+  String? get message {
+    final errors =
+        failure?.errors?.errors.values.expand((element) => element).toList();
+    if (errors != null && errors.isNotEmpty) {
+      return errors.first;
+    } else {
+      return failure?.message;
+    }
+  }
+
   String? get errorMessage => failure?.message;
   BaseErrors? get errors => failure?.errors;
 
