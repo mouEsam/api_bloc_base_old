@@ -21,7 +21,6 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   final LifecycleObserver? observer;
 
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
-  final _stateSubject = BehaviorSubject<ProviderState<Data>>();
   var _dataFuture = Completer<Data?>();
   var _stateFuture = Completer<ProviderState<Data>>();
 
@@ -35,9 +34,9 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   Stream<Data?> get dataStream =>
       async.LazyStream(() => _dataSubject.shareValue())
           .asBroadcastStream(onCancel: (c) => c.cancel());
-  Stream<ProviderState<Data>> get stateStream =>
-      async.LazyStream(() => _stateSubject.shareValue())
-          .asBroadcastStream(onCancel: (c) => c.cancel());
+
+  Stream<ProviderState<Data>> get stateStream => stream;
+
   Future<Data?> get dataFuture => _dataFuture.future;
   Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
 
@@ -132,9 +131,8 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   }
 
   void _handleState(state) {
-    Data data;
     if (state is ProviderLoadedState) {
-      data = state.data;
+      Data data = state.data;
       _retrialTimer?.cancel();
       _dataSubject.add(data);
       if (_dataFuture.isCompleted) {
@@ -142,7 +140,6 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
       }
       _dataFuture.complete(data);
     }
-    _stateSubject.add(state);
     if (_stateFuture.isCompleted) {
       _stateFuture = Completer<ProviderState<Data>>();
     }
@@ -172,16 +169,16 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
         emitErrorState(l.message, !refresh);
       },
       (r) {
-        print("handleStream");
+        print("${this.runtimeType} handleStream");
         _subscription?.cancel();
         _subscription =
             r.asBroadcastStream(onCancel: (c) => c.cancel()).doOnData((data) {
           if (!refresh) {
             emitLoading();
           }
-          print("doOnEach");
+          print("${this.runtimeType} doOnEach");
         }).switchMap<Tuple2<Data, List<ProviderState<dynamic>>>>((event) {
-          print("combine");
+          print("${this.runtimeType} combine");
           if (sources.isEmpty) {
             return Stream.value(Tuple2(event, []));
           } else {
@@ -190,7 +187,8 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
                 sources, (a) => Tuple2(event, a));
           }
         }).asyncMap((event) async {
-          print("asyncMap");
+          print("${this.runtimeType} asyncMap");
+          print("${event.value2.map((e) => e.runtimeType)} asyncMap");
           ProviderErrorState? errorState = event.value2
                   .firstWhereOrNull((element) => element is ProviderErrorState)
               as ProviderErrorState<dynamic>?;
@@ -208,7 +206,8 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
             return createLoadedState<Data>(result);
           }
         }).listen((event) {
-          print("listening");
+          print("${this.runtimeType} listening");
+          print("${event.runtimeType} listening");
           emitState(event);
         }, onError: (e, s) {
           print(e);
@@ -343,7 +342,6 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     observer?.removeListener(this);
     _subscription?.cancel();
     _dataSubject.drain().then((value) => _dataSubject.close());
-    _stateSubject.drain().then((value) => _stateSubject.close());
     _retrialTimer?.cancel();
     return super.close();
   }
