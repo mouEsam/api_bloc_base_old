@@ -45,11 +45,13 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
 
   X convert(T initialData);
 
-  bool isErrorMessage(T? initialData) {
-    return initialData?.errors != null || initialData?.error != null;
+  bool isErrorMessage(BaseApiResponse initialData) {
+    return initialData.errors != null ||
+        initialData.error != null ||
+        initialData.message != null;
   }
 
-  bool isSuccessMessage(T initialData) {
+  bool isSuccessMessage(BaseApiResponse initialData) {
     return initialData.success == true || initialData.success is String;
   }
 
@@ -59,7 +61,7 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
         (!isSuccessMessage(initialData) && !isErrorMessage(initialData));
   }
 
-  ResponseEntity? response(T initialData) {
+  ResponseEntity? response(BaseApiResponse initialData) {
     if (isSuccessMessage(initialData)) {
       return Success(initialData.message ??
           (initialData.success is String ? initialData.success : null));

@@ -12,11 +12,13 @@ export 'working_state.dart';
 mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
     implements LifecycleAware {
   final Duration? refreshInterval = const Duration(seconds: 30);
+  final Duration? retryInterval = const Duration(seconds: 30);
 
   Timer? _retrialTimer;
 
   bool green = false;
   bool shouldBeGreen = false;
+  bool wasSatUp = false;
 
   LifecycleObserver? get lifecycleObserver;
 
@@ -63,21 +65,37 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
     return finalStream;
   }
 
-  void setIndependenceUp() {
-    lifecycleObserver?.addListener(this);
+  void setIndependenceUp(
+      bool getOnCreate, bool enableRetry, bool enableRefresh) {
+    if (lifecycleObserver != null) {
+      lifecycleObserver?.addListener(this);
+    } else {
+      green = true;
+      shouldBeGreen = true;
+    }
+    _setUpListener(getOnCreate, enableRetry, enableRefresh);
+  }
+
+  void _setUpListener(bool getOnCreate, bool enableRetry, bool enableRefresh) {
     stream.listen((state) {
-      if (state is LoadedState && refreshInterval != null) {
-        _retrialTimer?.cancel();
-        _retrialTimer = Timer.periodic(refreshInterval!, (_) {
-          if (this.state is LoadedState) {
-            refresh();
-          }
-        });
+      if (state is ErrorState && enableRetry) {
+        if (retryInterval != null) {
+          _retrialTimer?.cancel();
+          _retrialTimer = Timer(retryInterval!, getData);
+        }
+      } else if (state is LoadedState && enableRefresh) {
+        if (refreshInterval != null) {
+          _retrialTimer?.cancel();
+          _retrialTimer = Timer.periodic(refreshInterval!, (_) => refresh());
+        }
       }
     }, onError: (e, s) {
       print(e);
       print(s);
     });
+    if (getOnCreate) {
+      startTries();
+    }
   }
 
   Output combineData(Output data) => data;
@@ -90,10 +108,16 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
   }
 
   final _ownDataSubject = StreamController<Input>.broadcast();
-  Stream<Input> get originalDataStream => _ownDataSubject.stream;
+  Stream<Input> get originalDataStream => _ownDataSubject.stream.shareValue();
 
   final BehaviorSubject<Output> _finalDataSubject = BehaviorSubject<Output>();
   Stream<Output> get finalDataStream => _finalDataSubject.shareValue();
+
+  void injectInput(Input input) {
+    if (!_ownDataSubject.isClosed) {
+      _ownDataSubject.add(input);
+    }
+  }
 
   void clean() {
     super.clean();
@@ -108,21 +132,18 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
       final data = dataSource;
       await handleDataRequest(data, refresh);
     }
-    return null;
   }
 
   Future<void> handleDataRequest(
       Result<Either<ResponseEntity, Input>> result, bool refresh) async {
-    if (!refresh) emitLoading();
+    if (!refresh) handleLoadingState(ProviderLoadingState<Input>());
     final future = await result.resultFuture;
     return future.fold(
       (l) {
-        handleEvent(ProviderErrorState<Output>(l.message));
+        handleErrorState(ProviderErrorState<Input>(l.message));
       },
       (r) {
-        if (!_ownDataSubject.isClosed) {
-          _ownDataSubject.add(r);
-        }
+        injectInput(r);
       },
     );
   }

@@ -22,10 +22,13 @@ abstract class BaseIndependentListingBloc<Output, Filtering extends FilterType>
   BaseIndependentListingBloc(
       {int searchDelayMillis = 1000,
       this.sources = const [],
+      bool enableRetry = true,
+      bool enableRefresh = true,
+      bool getOnCreate = true,
       Output? currentData,
       this.lifecycleObserver})
       : super(currentData: currentData, searchDelayMillis: searchDelayMillis) {
-    setIndependenceUp();
+    setIndependenceUp(getOnCreate, enableRetry, enableRefresh);
   }
 
   Output convertInput(Output output) => applyFilter(output, filter, query);

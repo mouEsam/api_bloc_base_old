@@ -45,9 +45,12 @@ abstract class BaseConverterBloc<Input, Output>
   Stream<Input> get inputStream => LazyStream(() => _inputSubject.stream);
   StreamSink<Input> get inputSink => _inputSubject.sink;
 
-  BaseConverterBloc({Output? currentData, this.sourceBloc})
+  BaseConverterBloc(
+      {bool getOnCreate = true, Output? currentData, this.sourceBloc})
       : super(currentData) {
-    getData();
+    if (getOnCreate && currentData == null) {
+      getData();
+    }
     _inputSubscription = inputStream.listen(handleInput, onError: (e, s) {
       print(e);
       print(s);
@@ -69,6 +72,7 @@ abstract class BaseConverterBloc<Input, Output>
 
   void clean() {
     // currentData = null;
+    wasInitialized = false;
   }
 
   void handleEvent(provider.ProviderState event) {
@@ -96,8 +100,13 @@ abstract class BaseConverterBloc<Input, Output>
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      setData(convertOutput(convertInput(event)));
+      handleOutput(convertInput(event));
     }
+  }
+
+  @mustCallSuper
+  void handleOutput(Output event) {
+    setData(convertOutput(event));
   }
 
   Output convertOutput(Output output) {
@@ -107,17 +116,26 @@ abstract class BaseConverterBloc<Input, Output>
   @mustCallSuper
   void setData(Output newData) {
     currentData = newData;
+    wasInitialized = true;
     emitLoaded();
   }
 
   @mustCallSuper
-  Future<void> getData([bool refresh = false]) async {
-    if (!refresh) emitLoading();
+  Future<void> getData([bool silent = false]) async {
+    print("base_converter_bloc");
+    if (!silent) emitLoading();
     return null;
   }
 
   Future<void> reset() async {
-    //currentData = null;
+    if (safeData is List) {
+      // currentData = (currentData as List).sublist(0, 0) as Output;
+      (currentData as List).clear();
+    } else if (safeData is Map) {
+      (currentData as Map).clear();
+    } else if (Output is Output?) {
+      currentData = null as Output;
+    }
     wasInitialized = false;
     return getData();
   }

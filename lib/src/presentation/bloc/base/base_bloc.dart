@@ -14,7 +14,13 @@ abstract class BaseCubit<State> extends Cubit<State> {
 
   @override
   Future<void> close() {
-    notifiers.forEach((element) => element.dispose());
+    notifiers.forEach((element) {
+      try {
+        element.dispose();
+      } catch (e) {
+        print(e);
+      }
+    });
     return super.close();
   }
 }

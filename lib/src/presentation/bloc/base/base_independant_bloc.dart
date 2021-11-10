@@ -14,9 +14,14 @@ abstract class BaseIndependentBloc<Input, Output>
   final LifecycleObserver? lifecycleObserver;
 
   BaseIndependentBloc(
-      {this.sources = const [], Output? currentData, this.lifecycleObserver})
-      : super(currentData: currentData) {
-    setIndependenceUp();
+      {bool enableRetry = true,
+      bool enableRefresh = true,
+      bool getOnCreate = true,
+      this.sources = const [],
+      Output? currentData,
+      this.lifecycleObserver})
+      : super(getOnCreate: getOnCreate, currentData: currentData) {
+    setIndependenceUp(getOnCreate, enableRetry, enableRefresh);
     // finalDataStream.listen(super.handleData);
   }
 }

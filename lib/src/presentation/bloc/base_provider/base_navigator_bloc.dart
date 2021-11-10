@@ -12,6 +12,8 @@ abstract class Sailor {
   GlobalKey<NavigatorState> get navKey;
   Future<T?> pushDestructively<T>(String routeName);
   Future<T?> push<T>(String routeName);
+  Future<void> goHome();
+  Future<void> popNum(int routes);
 }
 
 abstract class BaseNavigatorBloc extends BaseCubit<NavigationState>
@@ -129,6 +131,8 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState>
     }
   }
 
+  NavigationState? generateNavigationState(List events);
+
   Future<T?> pushDestructively<T>(String routeName) async {
     final key = await ensureInitialized();
     final result = await key.currentState!
@@ -142,7 +146,16 @@ abstract class BaseNavigatorBloc extends BaseCubit<NavigationState>
     return result as T?;
   }
 
-  NavigationState? generateNavigationState(List events);
+  Future<void> goHome() async {
+    final key = await ensureInitialized();
+    key.currentState!.popUntil((route) => route.isFirst);
+  }
+
+  Future<void> popNum(int routes) async {
+    int count = 0;
+    final key = await ensureInitialized();
+    key.currentState!.popUntil((route) => count++ == routes);
+  }
 
   @override
   Future<void> close() {

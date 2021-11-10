@@ -127,6 +127,7 @@ class BaseRestClient {
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
     final queryParameters =
         queryParams?.getQueryParams() ?? <String, dynamic>{};
+    print(queryParameters);
     queryParameters.removeWhere((k, v) => v == null);
     queryParameters.forEach((key, value) {
       if (value is List) {

@@ -8,7 +8,10 @@ abstract class BaseUserAwareBloc<Input, Output>
   final BaseUserBloc userBloc;
 
   BaseUserAwareBloc(this.userBloc,
-      {List<Stream<ProviderState>> sources = const [],
+      {bool enableRetry = true,
+      bool enableRefresh = true,
+      bool getOnCreate = true,
+      List<Stream<ProviderState>> sources = const [],
       Output? currentData,
       LifecycleObserver? lifecycleObserver})
       : super(
@@ -16,6 +19,6 @@ abstract class BaseUserAwareBloc<Input, Output>
             sources: sources,
             lifecycleObserver: lifecycleObserver) {
     setUpUserListener();
-    setIndependenceUp();
+    setIndependenceUp(getOnCreate, enableRetry, enableRefresh);
   }
 }

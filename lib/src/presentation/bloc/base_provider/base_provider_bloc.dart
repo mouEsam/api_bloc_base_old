@@ -4,9 +4,9 @@ import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:async/async.dart' as async;
+import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'lifecycle_observer.dart';
@@ -14,20 +14,18 @@ import 'provider_state.dart';
 
 export 'provider_state.dart';
 
-class BaseBloc extends Cubit<int> {
-  BaseBloc() : super(0);
-}
-
 abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     implements LifecycleAware {
   final Duration? refreshInterval = Duration(seconds: 30);
+  final Duration? retryInterval = Duration(seconds: 30);
   final LifecycleObserver? observer;
+
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
   final _stateSubject = BehaviorSubject<ProviderState<Data>>();
   var _dataFuture = Completer<Data?>();
   var _stateFuture = Completer<ProviderState<Data>>();
 
-  StreamSubscription<Data>? _subscription;
+  StreamSubscription<ProviderState<Data>>? _subscription;
   bool green = false;
   bool shouldBeGreen = false;
 
@@ -35,9 +33,11 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
 
   Timer? _retrialTimer;
   Stream<Data?> get dataStream =>
-      async.LazyStream(() => _dataSubject.shareValue());
+      async.LazyStream(() => _dataSubject.shareValue())
+          .asBroadcastStream(onCancel: (c) => c.cancel());
   Stream<ProviderState<Data>> get stateStream =>
-      async.LazyStream(() => _stateSubject.shareValue());
+      async.LazyStream(() => _stateSubject.shareValue())
+          .asBroadcastStream(onCancel: (c) => c.cancel());
   Future<Data?> get dataFuture => _dataFuture.future;
   Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
 
@@ -46,14 +46,22 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   Result<Either<ResponseEntity, Data>>? get dataSource => null;
   Either<ResponseEntity, Stream<Data>>? get dataSourceStream => null;
 
+  final List<Stream<ProviderState>> sources;
+
   BaseProviderBloc(
       {Data? initialDate,
       bool enableRetry = true,
       bool enableRefresh = true,
       bool getOnCreate = true,
-      this.observer})
+      this.observer,
+      this.sources = const []})
       : super(ProviderLoadingState()) {
-    observer?.addListener(this);
+    if (observer != null) {
+      observer?.addListener(this);
+    } else {
+      green = true;
+      shouldBeGreen = true;
+    }
     if (initialDate != null) {
       emit(ProviderLoadedState(initialDate));
     }
@@ -106,11 +114,13 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
       } else {
         _handleState(state);
       }
-      if (refreshInterval != null) {
-        if (state is ProviderErrorState && enableRetry) {
+      if (state is ProviderErrorState && enableRetry) {
+        if (retryInterval != null) {
           _retrialTimer?.cancel();
-          _retrialTimer = Timer(refreshInterval!, getData);
-        } else if (state is ProviderLoadedState && enableRefresh) {
+          _retrialTimer = Timer(retryInterval!, getData);
+        }
+      } else if (state is ProviderLoadedState && enableRefresh) {
+        if (refreshInterval != null) {
           _retrialTimer?.cancel();
           _retrialTimer = Timer.periodic(refreshInterval!, (_) => refresh());
         }
@@ -139,20 +149,18 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     _stateFuture.complete(state);
   }
 
-  Future<Data?> handleOperation(
+  Future<void> handleOperation(
       Result<Either<ResponseEntity, Data>> result, bool refresh) async {
     if (!refresh) {
       emitLoading();
     }
-    final future = await result.resultFuture!;
-    return future.fold<Data?>(
-      (l) {
+    final future = await result.resultFuture;
+    return future.fold(
+      (l) async {
         emitErrorState(l.message, !refresh);
-        return null;
       },
       (r) {
-        emit(ProviderLoadedState(r));
-        return r;
+        return handleStream(Right(Stream.value(r)), refresh);
       },
     );
   }
@@ -164,13 +172,44 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
         emitErrorState(l.message, !refresh);
       },
       (r) {
+        print("handleStream");
         _subscription?.cancel();
-        _subscription = r.doOnEach((notification) {
+        _subscription =
+            r.asBroadcastStream(onCancel: (c) => c.cancel()).doOnData((data) {
           if (!refresh) {
             emitLoading();
           }
+          print("doOnEach");
+        }).switchMap<Tuple2<Data, List<ProviderState<dynamic>>>>((event) {
+          print("combine");
+          if (sources.isEmpty) {
+            return Stream.value(Tuple2(event, []));
+          } else {
+            return CombineLatestStream<ProviderState<dynamic>,
+                    Tuple2<Data, List<ProviderState<dynamic>>>>(
+                sources, (a) => Tuple2(event, a));
+          }
+        }).asyncMap((event) async {
+          print("asyncMap");
+          ProviderErrorState? errorState = event.value2
+                  .firstWhereOrNull((element) => element is ProviderErrorState)
+              as ProviderErrorState<dynamic>?;
+          if (errorState != null) {
+            return createErrorState<Data>(errorState.message);
+          } else if (event.value2
+              .any((element) => element is ProviderLoadingState)) {
+            return createLoadingState<Data>();
+          } else {
+            final result = combineDataWithSources(
+                event.value1,
+                event.value2
+                    .map((e) => (e as ProviderLoadedState).data)
+                    .toList());
+            return createLoadedState<Data>(result);
+          }
         }).listen((event) {
-          emit(ProviderLoadedState(event));
+          print("listening");
+          emitState(event);
         }, onError: (e, s) {
           print(e);
           print(s);
@@ -180,9 +219,13 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     );
   }
 
+  Data combineDataWithSources(Data data, List<dynamic> map) {
+    return data;
+  }
+
   void interceptOperation<S>(Result<Either<ResponseEntity, S>> result,
       {void onSuccess()?, void onFailure()?, void onDate(S data)?}) {
-    result.resultFuture!.then((value) {
+    result.resultFuture.then((value) {
       value.fold((l) {
         if (l is Success) {
           onSuccess?.call();
@@ -201,7 +244,7 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
 
   void interceptResponse(Result<ResponseEntity> result,
       {void onSuccess()?, void onFailure()?}) {
-    result.resultFuture!.then((value) {
+    result.resultFuture.then((value) {
       if (value is Success) {
         onSuccess?.call();
       } else if (value is Failure) {
@@ -223,7 +266,7 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
         this.dataSourceStream;
     if (green && shouldBeGreen) {
       if (dataSource != null) {
-        return handleOperation(dataSource, refresh);
+        await handleOperation(dataSource, refresh);
       } else if (dataSourceStream != null && _subscription == null) {
         await handleStream(dataSourceStream, refresh);
         return null;
@@ -232,21 +275,47 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     return null;
   }
 
-  void invalidate() {
-    emit(InvalidatedState<Data>());
-  }
-
   Future<Data?> refresh() {
     return getData(refresh: true);
   }
 
+  ProviderState<Data> createLoadingState<Data>() {
+    return ProviderLoadingState<Data>();
+  }
+
+  ProviderState<Data> createLoadedState<Data>(Data data) {
+    return ProviderLoadedState<Data>(data);
+  }
+
+  ProviderState<Data> createErrorState<Data>(String? message) {
+    return ProviderErrorState<Data>(message);
+  }
+
+  void emitState(ProviderState<Data> state) {
+    if (state is ProviderLoadingState<Data>) {
+      emitLoading();
+    } else if (state is ProviderLoadedState<Data>) {
+      emitLoaded(state.data);
+    } else if (state is ProviderErrorState<Data>) {
+      emitErrorState(state.message, true);
+    }
+  }
+
   void emitLoading() {
-    emit(ProviderLoadingState<Data>());
+    emit(createLoadingState<Data>());
+  }
+
+  void emitLoaded(Data data) {
+    emit(createLoadedState<Data>(data));
+  }
+
+  void invalidate() {
+    emit(InvalidatedState<Data>());
   }
 
   void emitErrorState(String? message, bool clean) {
     if (clean) this.clean();
-    emit(ProviderErrorState<Data>(message));
+    emit(createErrorState<Data>(message));
   }
 
   Stream<ProviderState<Out>> transformStream<Out>(

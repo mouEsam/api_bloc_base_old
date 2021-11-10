@@ -34,11 +34,8 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
     on BaseConverterBloc<Paginated, Output> {
   static const int startPage = 1;
 
-  // IMPORTANT!
-  Duration? get refreshInterval => null;
-
   PaginatedOutput<Output> get empty =>
-      const PaginatedOutput({}, true, startPage, null);
+      const PaginatedOutput({}, false, startPage, null);
 
   Paginated? lastInput;
 
@@ -67,13 +64,19 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
   }
 
   @override
+  Output convertInput(input) {
+    return input.input;
+  }
+
+  @override
   @mustCallSuper
   void setData(newData) {
     final isThereMore = canGetMore(newData);
     final map = paginatedData.data;
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
-    paginatedData = PaginatedOutput(newMap, isThereMore, currentPage, lastInput?.nextUrl);
+    paginatedData =
+        PaginatedOutput(newMap, isThereMore, currentPage, lastInput?.nextUrl);
     super.setData(newData);
   }
 
@@ -103,8 +106,9 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
       if (nextData != null) {
         setData(nextData);
         emitLoaded();
+      } else {
+        getData(true);
       }
-      return super.getData();
     }
   }
 

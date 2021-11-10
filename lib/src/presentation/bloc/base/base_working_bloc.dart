@@ -36,8 +36,8 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
 
   BlocState<Output> get initialState => LoadedState(currentData);
 
-  Map<String, Tuple3<String, CancelToken?, Stream<double>?>> _operationStack =
-      {};
+  Map<String, Tuple4<String, CancelToken?, Stream<double>?, bool>>
+      _operationStack = {};
 
   BaseWorkingBloc.work(Output currentData) : super(LoadingState()) {
     this.currentData = currentData;
@@ -45,7 +45,7 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   }
 
   BaseWorkingBloc(Output? currentData) : super(LoadingState()) {
-    if (currentData != null || currentData?.runtimeType == Output) {
+    if (currentData != null || Output is Output?) {
       this.currentData = currentData!;
     }
     emit(initialState);
@@ -57,7 +57,7 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
 
   void interceptOperation<S>(Result<Either<ResponseEntity, S>> result,
       {void onSuccess()?, void onFailure()?, void onDate(S data)?}) {
-    result.resultFuture!.then((value) {
+    result.resultFuture.then((value) {
       value.fold((l) {
         if (l is Success) {
           onSuccess?.call();
@@ -73,7 +73,7 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
 
   void interceptResponse(Result<ResponseEntity> result,
       {void onSuccess()?, void onFailure()?}) {
-    result.resultFuture!.then((value) {
+    result.resultFuture.then((value) {
       if (value is Success) {
         onSuccess?.call();
       } else if (value is Failure) {
@@ -83,9 +83,12 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   }
 
   void checkOperations() {
-    if (_operationStack.isNotEmpty && state is! Operation) {
+    if (_operationStack.isNotEmpty && state is! OnGoingOperationState) {
       final item = _operationStack.entries.first;
-      startOperation(item.value.value1, item.value.value2, item.value.value3,
+      startOperation(item.value.value1,
+          cancelToken: item.value.value2,
+          progress: item.value.value3,
+          announceLoading: item.value.value4,
           operationTag: item.key);
     }
   }
@@ -94,25 +97,38 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
       Result<Either<ResponseEntity, T>> result,
       {String? loadingMessage,
       String? successMessage,
+      bool announceFailure = true,
+      bool announceSuccess = true,
+      bool emitFailure = true,
+      bool emitSuccess = true,
       String operationTag = _DEFAULT_OPERATION,
       bool Function(ResponseEntity response, String tag)?
           handleResponse}) async {
-    startOperation(loadingMessage, result.cancelToken, result.progress,
+    startOperation(loadingMessage,
+        cancelToken: result.cancelToken,
+        progress: result.progress,
         operationTag: operationTag);
-    final future = await result.resultFuture!;
+    final future = await result.resultFuture;
     return future.fold<T?>(
       (l) {
         bool? handled = handleResponse?.call(l, operationTag);
         if (handled == true) {
           removeOperation(operationTag: operationTag);
         } else {
-          this.handleResponse(l, operationTag: operationTag);
+          this.handleResponse(l,
+              announceFailure: announceFailure,
+              announceSuccess: announceSuccess,
+              emitFailure: emitFailure,
+              emitSuccess: emitSuccess,
+              operationTag: operationTag);
         }
         return null;
       },
       (r) {
         successfulOperation(
           successMessage,
+          emitSuccess: emitSuccess,
+          announceSuccess: announceSuccess,
           operationTag: operationTag,
         );
         return r;
@@ -123,22 +139,47 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   Future<Operation?> handleOperation(Result<ResponseEntity> result,
       {String? loadingMessage,
       String? successMessage,
+      bool announceLoading = true,
+      bool announceFailure = true,
+      bool emitFailure = true,
+      bool announceSuccess = true,
+      bool emitSuccess = true,
       String operationTag = _DEFAULT_OPERATION}) async {
-    startOperation(loadingMessage, result.cancelToken, result.progress,
+    startOperation(loadingMessage,
+        cancelToken: result.cancelToken,
+        progress: result.progress,
+        announceLoading: announceLoading,
+        emitLoading: emitFailure || emitSuccess,
         operationTag: operationTag);
-    final future = await result.resultFuture!;
-    return handleResponse(future, operationTag: operationTag);
+    final future = await result.resultFuture;
+    return handleResponse(future,
+        announceFailure: announceFailure,
+        emitFailure: emitFailure,
+        announceSuccess: announceSuccess,
+        emitSuccess: emitSuccess,
+        operationTag: operationTag);
   }
 
-  Operation? handleResponse(ResponseEntity l,
-      {String operationTag = _DEFAULT_OPERATION,
-      bool failure = true,
-      bool success = true}) {
+  Operation? handleResponse(
+    ResponseEntity l, {
+    String operationTag = _DEFAULT_OPERATION,
+    Function()? retry,
+    bool announceFailure = true,
+    bool emitFailure = true,
+    bool announceSuccess = true,
+    bool emitSuccess = true,
+  }) {
     if (l is Failure) {
-      return failedOperation(l, doEmit: failure, operationTag: operationTag);
+      return failedOperation(l,
+          announceFailure: announceFailure,
+          emitFailure: emitFailure,
+          retry: retry,
+          operationTag: operationTag);
     } else if (l is Success) {
       return successfulOperation(l.message,
-          doEmit: success, operationTag: operationTag);
+          announceSuccess: announceSuccess,
+          emitSuccess: emitSuccess,
+          operationTag: operationTag);
     } else {
       removeOperation(operationTag: operationTag);
     }
@@ -149,17 +190,27 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
     emit(LoadedState<Output>(currentData));
   }
 
-  void startOperation(
-      String? message, CancelToken? token, Stream<double>? progress,
-      {String operationTag = _DEFAULT_OPERATION}) {
+  void startOperation(String? message,
+      {CancelToken? cancelToken,
+      Stream<double>? progress,
+      bool announceLoading = true,
+      bool emitLoading = true,
+      String operationTag = _DEFAULT_OPERATION}) {
     message ??= loading;
-    emit(OnGoingOperationState(
-      currentData,
-      loadingMessage: message,
-      operationTag: operationTag,
-      progress: progress,
-    ));
-    _operationStack[operationTag] = Tuple3(message, token, progress);
+    print(announceLoading);
+    print("operationTag");
+    if (emitLoading) {
+      emit(OnGoingOperationState(
+        currentData,
+        loadingMessage: message,
+        operationTag: operationTag,
+        progress: progress,
+        token: cancelToken,
+        silent: !announceLoading,
+      ));
+      _operationStack[operationTag] =
+          Tuple4(message, cancelToken, progress, announceLoading);
+    }
     checkOperations();
   }
 
@@ -179,34 +230,52 @@ abstract class BaseWorkingBloc<Output> extends BaseCubit<BlocState<Output>> {
   }
 
   Operation successfulOperation(String? message,
-      {bool doEmit = true, String operationTag = _DEFAULT_OPERATION}) {
+      {bool announceSuccess = true,
+      bool emitSuccess = true,
+      String operationTag = _DEFAULT_OPERATION}) {
     final op = SuccessfulOperationState(currentData,
-        successMessage: message, operationTag: operationTag);
-    if (doEmit) emit(op);
+        silent: !announceSuccess,
+        successMessage: message,
+        operationTag: operationTag);
+    if (emitSuccess) emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
     return op;
   }
 
   FailedOperationState failedOperationMessage(String? message,
-      {bool doEmit = true,
+      {bool announceFailure = true,
+      bool emitFailure = true,
       BaseErrors? errors,
+      Function()? retry,
       String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState.message(currentData,
-        errorMessage: message, operationTag: operationTag, errors: errors);
-    return _failedOperation(op, doEmit: doEmit, operationTag: operationTag);
+        errorMessage: message,
+        operationTag: operationTag,
+        retry: retry,
+        silent: !announceFailure,
+        errors: errors);
+    return _failedOperation(op,
+        emitFailure: emitFailure, operationTag: operationTag);
   }
 
   FailedOperationState failedOperation(Failure? failure,
-      {bool doEmit = true, String operationTag = _DEFAULT_OPERATION}) {
+      {bool announceFailure = true,
+      bool emitFailure = true,
+      Function()? retry,
+      String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState(currentData,
-        failure: failure, operationTag: operationTag);
-    return _failedOperation(op, doEmit: doEmit, operationTag: operationTag);
+        silent: !announceFailure,
+        failure: failure,
+        operationTag: operationTag,
+        retry: retry);
+    return _failedOperation(op,
+        emitFailure: emitFailure, operationTag: operationTag);
   }
 
   FailedOperationState _failedOperation(FailedOperationState<Output> op,
-      {bool doEmit = true, String operationTag = _DEFAULT_OPERATION}) {
-    if (doEmit) emit(op);
+      {bool emitFailure = true, String operationTag = _DEFAULT_OPERATION}) {
+    if (emitFailure) emit(op);
     _operationStack.remove(operationTag);
     checkOperations();
     return op;

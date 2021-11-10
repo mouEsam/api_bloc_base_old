@@ -8,8 +8,14 @@ abstract class BasePaginatedBloc<Paginated extends PaginatedInput<Data>, Data>
     extends BaseIndependentBloc<Paginated, Data>
     with PaginatedMixin<Paginated, Data> {
   BasePaginatedBloc(
-      {List<Stream<ProviderState>> sources = const [], Data? currentData})
-      : super(currentData: currentData, sources: sources) {
-    setIndependenceUp();
-  }
+      {bool enableRetry = true,
+      bool getOnCreate = true,
+      List<Stream<ProviderState>> sources = const [],
+      Data? currentData})
+      : super(
+            enableRetry: enableRetry,
+            getOnCreate: getOnCreate,
+            enableRefresh: false,
+            currentData: currentData,
+            sources: sources) {}
 }

@@ -12,12 +12,14 @@ abstract class UserDependantProvider<Data> extends BaseProviderBloc<Data>
       {Data? initialData,
       bool enableRefresh = true,
       bool enableRetry = true,
+      List<Stream<ProviderState>> sources = const [],
       LifecycleObserver? lifecycleObserver})
       : super(
             initialDate: initialData,
             getOnCreate: false,
             enableRefresh: enableRefresh,
             enableRetry: enableRetry,
+            sources: sources,
             observer: lifecycleObserver) {
     setUpUserListener();
   }
