@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
+import 'package:async/async.dart' as async;
 import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
@@ -49,6 +50,14 @@ abstract class ProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
 
   late bool _lastTrafficLightsValue;
 
+  final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
+  var _dataFuture = Completer<Data?>();
+  var _stateFuture = Completer<ProviderState<Data>>();
+  Data? get latestData => _dataSubject.value;
+  Stream<Data?> get dataStream =>
+      async.LazyStream(() => _dataSubject.shareValue())
+          .asBroadcastStream(onCancel: (c) => c.cancel());
+
   Timer? _timer;
 
   ProviderBloc({
@@ -63,7 +72,7 @@ abstract class ProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   }) : super(ProviderLoading()) {
     setupTrafficLights();
     setupStreams();
-    setupRetrialAndRefresh();
+    setupStateListeners();
     setupInitialData(initialDate);
     if (getOnCreate) {
       fetchData();
@@ -121,17 +130,40 @@ abstract class ProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     );
   }
 
-  void setupRetrialAndRefresh() {
+  void setupStateListeners() {
     _stateSubscription = stream.listen((state) {
       if (state is Invalidated) {
+        clean();
         fetchData();
         return;
+      } else {
+        _handleState(state);
       }
       setupTimer();
     }, onError: (e, s) {
       print(e);
       print(s);
     });
+  }
+
+  void clean() {
+    _dataSubject.value = null;
+    _dataFuture = Completer();
+  }
+
+  void _handleState(state) {
+    if (state is ProviderLoaded) {
+      Data data = state.data;
+      _dataSubject.add(data);
+      if (_dataFuture.isCompleted) {
+        _dataFuture = Completer<Data>();
+      }
+      _dataFuture.complete(data);
+    }
+    if (_stateFuture.isCompleted) {
+      _stateFuture = Completer<ProviderState<Data>>();
+    }
+    _stateFuture.complete(state);
   }
 
   void setupTimer() {
@@ -236,6 +268,7 @@ abstract class ProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
     _stateSubscription.cancel();
     _streamSourceSubscription?.cancel();
     _timer?.cancel();
+    _dataSubject.drain().then((value) => _dataSubject.close());
     return super.close();
   }
 }

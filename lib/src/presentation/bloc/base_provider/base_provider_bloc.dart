@@ -40,7 +40,7 @@ abstract class BaseProviderBloc<Data> extends BaseCubit<ProviderState<Data>>
   Future<Data?> get dataFuture => _dataFuture.future;
   Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
 
-  Data? get latestData => _dataSubject.value;
+  Data? get latestData => _dataSubject.valueOrNull;
 
   Result<Either<ResponseEntity, Data>>? get dataSource => null;
   Either<ResponseEntity, Stream<Data>>? get dataSourceStream => null;

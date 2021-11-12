@@ -29,13 +29,14 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     );
   }
 
-  Result<Either<ResponseEntity, T>> autoLogin() {
-    final savedProfile = userDefaults.signedAccount
-        .catchError((e, s) => null)
-        .then<Either<ResponseEntity, T>>((account) {
+  Result<Either<ResponseEntity, T>> autoLogin([T? profile]) {
+    final savedProfile = Future(() async {
+      return profile ?? await userDefaults.signedAccount;
+    }).catchError((e, s) => profile).then<Either<ResponseEntity, T>>((account) {
       if (account is T) {
         final operation = refresh(account);
-        final result = handleFullResponse<BaseUserResponse, T>(operation, converter: refreshConverter);
+        final result = handleFullResponse<BaseUserResponse, T>(operation,
+            converter: refreshConverter);
         return result.resultFuture.then((value) {
           value.forEach((r) {
             if (r.active == true) {

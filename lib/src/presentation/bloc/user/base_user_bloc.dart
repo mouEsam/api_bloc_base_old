@@ -34,7 +34,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
         }
       });
 
-  T? get currentUser => _userAccount.value;
+  T? get currentUser => _userAccount.valueOrNull;
 
   BaseUserBloc(this.authRepository) : super(UserLoadingState()) {
     autoSignIn();
@@ -64,7 +64,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     if (!silent) {
       emit(UserLoadingState());
     }
-    final result = await authRepository.autoLogin().resultFuture;
+    final result = await authRepository.autoLogin(currentUser).resultFuture;
     result.fold((l) {
       if (l is RefreshFailure<T>) {
         handleFailedRefresh(l.oldProfile, silent);

@@ -209,6 +209,7 @@ class BaseRestClient {
       // Unnecessary but why not 🤷‍
       newBaseUrl = "";
     }
+    print(path);
     Future<Response> result;
     if (mockedResult == null) {
       dio.options.baseUrl = newBaseUrl;
