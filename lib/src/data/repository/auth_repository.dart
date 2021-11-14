@@ -31,15 +31,19 @@ abstract class BaseAuthRepository<T extends BaseProfile>
 
   Result<Either<ResponseEntity, T>> autoLogin([T? profile]) {
     final savedProfile = Future(() async {
-      return profile ?? await userDefaults.signedAccount;
-    }).catchError((e, s) => profile).then<Either<ResponseEntity, T>>((account) {
+      return await userDefaults.signedAccount;
+    })
+        .catchError((e, s) => null)
+        .then<Either<ResponseEntity, T>>((savedAccount) {
+      final save = savedAccount != null;
+      final account = savedAccount ?? profile;
       if (account is T) {
         final operation = refresh(account);
         final result = handleFullResponse<BaseUserResponse, T>(operation,
             converter: refreshConverter);
         return result.resultFuture.then((value) {
           value.forEach((r) {
-            if (r.active == true) {
+            if (r.active == true && save) {
               userDefaults.setSignedAccount(r);
               userDefaults.setUserToken(r.accessToken);
             }
@@ -52,6 +56,20 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     return Result(resultFuture: savedProfile);
   }
 
+  Result<ResponseEntity> saveProfileIfShouldBeRemembered(T profile) {
+    final Future<ResponseEntity> savedProfile =
+        userDefaults.signedAccount.then<ResponseEntity>((oldProfile) async {
+      if (oldProfile is T) {
+        if (profile.active == true) {
+          userDefaults.setSignedAccount(profile);
+          userDefaults.setUserToken(profile.accessToken);
+        }
+      }
+      return Success();
+    }).catchError((e, s) => NoAccountSavedFailure(noAccountSavedInError));
+    return Result(resultFuture: savedProfile);
+  }
+
   Result<ResponseEntity> offlineSignOut() {
     final one = userDefaults.setSignedAccount(null);
     final two = userDefaults.setUserToken(null);
@@ -60,7 +78,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     }).catchError((e, s) {
       print(e);
       print(s);
-      return Failure(e.message);
+      return Failure(e.response);
     });
     return Result(resultFuture: result);
   }
