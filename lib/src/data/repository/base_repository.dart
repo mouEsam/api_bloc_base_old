@@ -67,6 +67,7 @@ abstract class BaseRepository {
         return z.Left<ResponseEntity, S>(_converter.response(data!)!);
       }
     }).catchError((e, s) async {
+      print("Exception caught");
       print(e);
       print(s);
       if (e is DioError && e.type == DioErrorType.cancel) {
@@ -108,6 +109,7 @@ abstract class BaseRepository {
       interceptData?.call(data);
       return _converter.response(data)!;
     }).catchError((e, s) async {
+      print("Exception caught");
       print(e);
       print(s);
       if (e is DioError && e.type == DioErrorType.cancel) {
@@ -135,6 +137,7 @@ abstract class BaseRepository {
       interceptResult?.call(data);
       return z.Right<ResponseEntity, S>(data!);
     }).catchError((e, s) async {
+      print("Exception caught");
       print(e);
       print(s);
       if (e is DioError && e.type == DioErrorType.cancel) {
@@ -167,6 +170,7 @@ abstract class BaseRepository {
         return workAsync
             .then<z.Either<Failure, T>>((value) => z.Right<Failure, T>(value))
             .catchError((e, s) {
+          print("Exception caught");
           print(e);
           print(s);
           return handleError<T>(e,
@@ -178,6 +182,7 @@ abstract class BaseRepository {
         return z.Right(result);
       }
     } catch (e, s) {
+      print("Exception caught");
       print(e);
       print(s);
       return handleError<T>(e,
