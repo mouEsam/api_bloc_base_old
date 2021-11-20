@@ -104,6 +104,7 @@ class BaseRestClient {
     ResponseType responseType = ResponseType.json,
     CachePolicy? cachePolicy,
     QueryParams? queryParams,
+    Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
@@ -125,11 +126,14 @@ class BaseRestClient {
           cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
     }
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
-    final queryParameters =
+    final qParameters =
         queryParams?.getQueryParams() ?? <String, dynamic>{};
-    print(queryParameters);
-    queryParameters.removeWhere((k, v) => v == null);
-    queryParameters.forEach((key, value) {
+    if (qParameters != null) {
+      qParameters.addAll(queryParameters);
+    }
+    print(qParameters);
+    qParameters.removeWhere((k, v) => v == null);
+    qParameters.forEach((key, value) {
       if (value is List) {
         value.removeWhere((element) => element == null);
       }
@@ -214,7 +218,7 @@ class BaseRestClient {
     if (mockedResult == null) {
       dio.options.baseUrl = newBaseUrl;
       result = dio.request(path,
-          queryParameters: queryParameters,
+          queryParameters: qParameters,
           cancelToken: cancelToken,
           onReceiveProgress: _progressListener,
           onSendProgress: _progressListener,
