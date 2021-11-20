@@ -128,7 +128,7 @@ class BaseRestClient {
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
     final qParameters =
         queryParams?.getQueryParams() ?? <String, dynamic>{};
-    if (qParameters != null) {
+    if (queryParameters != null) {
       qParameters.addAll(queryParameters);
     }
     print(qParameters);
