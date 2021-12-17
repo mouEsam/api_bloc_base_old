@@ -100,7 +100,11 @@ abstract class BaseConverterBloc<Input, Output>
     if (event == null) {
       emit(ErrorState<Output>(notFoundMessage));
     } else {
-      handleOutput(convertInput(event));
+      try {
+        handleOutput(convertInput(event));
+      } catch(e) {
+        emit(ErrorState(defaultError));
+      }
     }
   }
 
