@@ -149,6 +149,12 @@ abstract class BaseConverterBloc<Input, Output>
     sourceBloc?.refresh();
     return getData(true);
   }
+    
+  @mustCallSuper
+  Future<void> retryGetData() async {
+    sourceBloc?.refresh();
+    return getData(false);
+  }
 
   @override
   Future<void> close() {
