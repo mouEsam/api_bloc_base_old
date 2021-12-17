@@ -29,6 +29,11 @@ class BaseUserProvider<UserType extends BaseProfile>
     
     @override
   Future<void> refresh() {
-    return userBloc.autoSignIn(true);
+      final oldState = state;
+      emitLoading();
+    return userBloc.autoSignIn(true).then((value) {
+        emit(oldState);
+        return userBloc.currentUser;
+    });
   }
 }
