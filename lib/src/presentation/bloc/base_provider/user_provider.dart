@@ -26,4 +26,9 @@ class BaseUserProvider<UserType extends BaseProfile>
         }
         return null;
       }).whereType<ProviderState<UserType>>();
+    
+    @override
+  Future<void> refresh() {
+    return userBloc.autoSignIn(true);
+  }
 }
