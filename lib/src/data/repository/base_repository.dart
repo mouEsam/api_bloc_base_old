@@ -82,14 +82,22 @@ abstract class BaseRepository {
         }
       }
       if (e is DioError) {
-        return z.Left<ResponseEntity, S>(
-          InternetFailure(internetError, e),
-        );
-      } else {
-        return z.Left<ResponseEntity, S>(
-          Failure(defaultError),
-        );
+        switch (e.type) {
+          case DioErrorType.connectTimeout:
+          case DioErrorType.sendTimeout:
+          case DioErrorType.receiveTimeout:
+          return z.Left<ResponseEntity, S>(
+            InternetFailure(e.message, e),
+          );
+          case DioErrorType.response:
+            return z.Left<ResponseEntity, S>(
+              Failure(e.message, e.response.statusCode),
+            );
+        }
       }
+      return z.Left<ResponseEntity, S>(
+        Failure(defaultError),
+      );
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
@@ -112,13 +120,19 @@ abstract class BaseRepository {
       print("Exception caught");
       print(e);
       print(s);
-      if (e is DioError && e.type == DioErrorType.cancel) {
-        return Cancellation();
-      } else if (e is DioError) {
-        return InternetFailure(internetError, e);
-      } else {
-        return Failure(defaultError);
+      if (e is DioError) {
+        switch (e.type) {
+          case DioErrorType.cancel:
+            return Cancellation();
+          case DioErrorType.connectTimeout:
+          case DioErrorType.sendTimeout:
+          case DioErrorType.receiveTimeout:
+            return InternetFailure(e.message, e);
+          case DioErrorType.response:
+            return Failure(e.message, e.response.statusCode);
+        }
       }
+      return Failure(defaultError);
     });
     return Result<ResponseEntity>(
         cancelToken: cancelToken,
@@ -140,19 +154,19 @@ abstract class BaseRepository {
       print("Exception caught");
       print(e);
       print(s);
-      if (e is DioError && e.type == DioErrorType.cancel) {
-        return z.Left<ResponseEntity, S>(
-          Cancellation(),
-        );
-      } else if (e is DioError) {
-        return z.Left<ResponseEntity, S>(
-          InternetFailure(internetError, e),
-        );
-      } else {
-        return z.Left<ResponseEntity, S>(
-          Failure(defaultError),
-        );
+      if (e is DioError) {
+        switch (e.type) {
+          case DioErrorType.cancel:
+            return Cancellation();
+          case DioErrorType.connectTimeout:
+          case DioErrorType.sendTimeout:
+          case DioErrorType.receiveTimeout:
+            return InternetFailure(e.message, e);
+          case DioErrorType.response:
+            return Failure(e.message, e.response.statusCode);
+        }
       }
+      return Failure(defaultError);
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
