@@ -21,9 +21,10 @@ class Success extends ResponseEntity {
 }
 
 class Failure extends ResponseEntity {
+  final int? errorCode;
   final BaseErrors? errors;
 
-  const Failure(String? message, [this.errors]) : super(message);
+  const Failure(String? message, [this.errorCode, this.errors]) : super(message);
 
   @override
   List<Object?> get props => [...super.props, this.errors];
@@ -31,8 +32,8 @@ class Failure extends ResponseEntity {
 
 class InternetFailure extends Failure {
   final DioError dioError;
-  const InternetFailure(String message, this.dioError, [BaseErrors? errors])
-      : super(message, errors);
+  const InternetFailure(String message, this.dioError, [int? errorCode, BaseErrors? errors])
+      : super(message, null, errors);
 
   @override
   List<Object?> get props => [...super.props, this.dioError];
@@ -47,7 +48,7 @@ class Cancellation extends ResponseEntity {
 
 class NoAccountSavedFailure extends Failure {
   const NoAccountSavedFailure(String message, [BaseErrors? errors])
-      : super(message, errors);
+      : super(message, null, errors);
 
   @override
   get props => [...super.props];
@@ -57,7 +58,17 @@ class RefreshFailure<T extends BaseProfile> extends Failure {
   final T oldProfile;
 
   const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])
-      : super(message, errors);
+      : super(message, null, errors);
+
+  @override
+  get props => [...super.props, this.oldProfile];
+}
+
+class LoginFailure<T extends BaseProfile> extends Failure {
+  final T oldProfile;
+
+  const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])
+      : super(message, null, errors);
 
   @override
   get props => [...super.props, this.oldProfile];
