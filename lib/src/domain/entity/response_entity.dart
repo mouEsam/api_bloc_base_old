@@ -65,11 +65,10 @@ class RefreshFailure<T extends BaseProfile> extends Failure {
 }
 
 class LoginFailure<T extends BaseProfile> extends Failure {
-  final T oldProfile;
 
-  const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])
+  const RefreshFailure(String? message, [BaseErrors? errors])
       : super(message, null, errors);
 
   @override
-  get props => [...super.props, this.oldProfile];
+  get props => [...super.props];
 }
