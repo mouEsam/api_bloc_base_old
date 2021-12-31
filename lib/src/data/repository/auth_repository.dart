@@ -56,7 +56,11 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
   
   ResponseEntity handleLoginFailure(ResponseEntity responseEntity,[T? oldAccount]) {
-    return RefreshFailure(responseEntity.message, oldAccount);
+    if (oldAccount != null) {
+      return RefreshFailure(responseEntity.message, oldAccount);
+    } else {
+      return LoginFailure(responseEntity.message);
+    }
   }
 
   Result<ResponseEntity> saveProfileIfShouldBeRemembered(T profile) {
