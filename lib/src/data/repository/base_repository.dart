@@ -86,13 +86,15 @@ abstract class BaseRepository {
           case DioErrorType.connectTimeout:
           case DioErrorType.sendTimeout:
           case DioErrorType.receiveTimeout:
-          return z.Left<ResponseEntity, S>(
-            InternetFailure(e.message, e),
-          );
+            return z.Left<ResponseEntity, S>(
+              InternetFailure(e.message, e),
+            );
           case DioErrorType.response:
             return z.Left<ResponseEntity, S>(
-              Failure(e.message, e.response.statusCode),
+              Failure(e.message, e.response?.statusCode),
             );
+          case DioErrorType.other:
+            break;
         }
       }
       return z.Left<ResponseEntity, S>(
@@ -129,7 +131,9 @@ abstract class BaseRepository {
           case DioErrorType.receiveTimeout:
             return InternetFailure(e.message, e);
           case DioErrorType.response:
-            return Failure(e.message, e.response.statusCode);
+            return Failure(e.message, e.response?.statusCode);
+          case DioErrorType.other:
+            break;
         }
       }
       return Failure(defaultError);
@@ -157,16 +161,26 @@ abstract class BaseRepository {
       if (e is DioError) {
         switch (e.type) {
           case DioErrorType.cancel:
-            return Cancellation();
+            return z.Left<ResponseEntity, S>(
+              Cancellation(),
+            );
           case DioErrorType.connectTimeout:
           case DioErrorType.sendTimeout:
           case DioErrorType.receiveTimeout:
-            return InternetFailure(e.message, e);
+            return z.Left<ResponseEntity, S>(
+              InternetFailure(e.message, e),
+            );
           case DioErrorType.response:
-            return Failure(e.message, e.response.statusCode);
+            return z.Left<ResponseEntity, S>(
+              Failure(e.message, e.response?.statusCode),
+            );
+          case DioErrorType.other:
+            break;
         }
       }
-      return Failure(defaultError);
+      return z.Left<ResponseEntity, S>(
+        Failure(e.message, e.response?.statusCode),
+      );
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,

@@ -67,7 +67,7 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
           (initialData.success is String ? initialData.success : null));
     } else if (isErrorMessage(initialData)) {
       return Failure(
-          initialData.message ?? initialData.error, initialData.errors);
+          initialData.message ?? initialData.error, null, initialData.errors);
     }
     return null;
   }

@@ -83,7 +83,7 @@ class FailedOperationState<T> extends LoadedState<T> implements Operation {
       String? errorMessage,
       BaseErrors? errors,
       this.retry})
-      : failure = Failure(errorMessage, errors),
+      : failure = Failure(errorMessage, null, errors),
         super(data);
 
   String? get message {
