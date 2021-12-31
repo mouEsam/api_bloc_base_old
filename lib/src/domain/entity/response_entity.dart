@@ -66,7 +66,7 @@ class RefreshFailure<T extends BaseProfile> extends Failure {
 
 class LoginFailure<T extends BaseProfile> extends Failure {
 
-  const RefreshFailure(String? message, [BaseErrors? errors])
+  const LoginFailure(String? message, [BaseErrors? errors])
       : super(message, null, errors);
 
   @override
