@@ -28,7 +28,6 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       },
     );
   }
-
   Result<Either<ResponseEntity, T>> autoLogin([T? profile]) {
     final savedProfile = Future(() async {
       return await userDefaults.signedAccount;
@@ -48,12 +47,16 @@ abstract class BaseAuthRepository<T extends BaseProfile>
               userDefaults.setUserToken(r.accessToken);
             }
           });
-          return value.leftMap((l) => RefreshFailure(l.message, account));
+          return value.leftMap((l) => handleLoginFailure(l, account));
         });
       }
       return Left(NoAccountSavedFailure(noAccountSavedInError));
     });
     return Result(resultFuture: savedProfile);
+  }
+  
+  ResponseEntity handleLoginFailure(ResponseEntity responseEntity,[T? oldAccount]) {
+    return RefreshFailure(responseEntity.message, oldAccount);
   }
 
   Result<ResponseEntity> saveProfileIfShouldBeRemembered(T profile) {
