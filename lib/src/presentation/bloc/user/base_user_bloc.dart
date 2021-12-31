@@ -68,6 +68,8 @@ abstract class BaseUserBloc<T extends BaseProfile>
     result.fold((l) {
       if (l is RefreshFailure<T>) {
         handleFailedRefresh(l.oldProfile, silent);
+      } else if (l is LoginFailure<T>) {
+        handleUser(null);
       } else {
         handleUser(null);
       }
