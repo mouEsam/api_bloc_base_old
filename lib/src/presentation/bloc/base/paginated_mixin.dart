@@ -57,7 +57,8 @@ mixin PaginatedMixin<Paginated extends PaginatedInput<Output>, Output>
   @override
   @mustCallSuper
   void handleInput(event) {
-    if (currentPage == event.currentPage) {
+    final index = lastInput?.currentPage ?? 0;
+    if (index < event.currentPage) {
       lastInput = event;
     }
     super.handleInput(event);
