@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -36,21 +37,18 @@ mixin IndependentMixin<Input, Output> on BaseConverterBloc<Input, Output>
       finalStream = CombineLatestStream.combine2<List, Input,
               provider.ProviderState<Input>>(stream, originalDataStream,
           (list, data) {
-        provider.ProviderErrorState? error = list.firstWhere(
-            (element) => element is provider.ProviderErrorState,
-            orElse: () => null);
+        provider.ProviderErrorState? error = list.firstWhereOrNull(
+            (element) => element is provider.ProviderErrorState);
         if (error != null) {
           return provider.ProviderErrorState<Input>(error.message);
         }
-        provider.ProviderLoadingState? loading = list.firstWhere(
-            (element) => element is provider.ProviderLoadingState,
-            orElse: () => null);
+        provider.ProviderLoadingState? loading = list.firstWhereOrNull(
+            (element) => element is provider.ProviderLoadingState);
         if (loading != null) {
           return provider.ProviderLoadingState<Input>();
         }
-        provider.InvalidatedState? invalidated = list.firstWhere(
-            (element) => element is provider.InvalidatedState,
-            orElse: () => null);
+        provider.InvalidatedState? invalidated = list.firstWhereOrNull(
+            (element) => element is provider.InvalidatedState);
         if (invalidated != null) {
           return provider.InvalidatedState<Input>();
         }
